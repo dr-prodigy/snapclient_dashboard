@@ -248,10 +248,10 @@ class Dashboard:
         vol_empty_char = '_'
         if io_status.is_muted:
             status = ' Mute '
-            vol_char = '#'
+            vol_full_char = '#'
             vol_empty_char = '^'
         self.line[0] = '     {}     '.format(status)
-        self.line[1] = ' {}{} '.format(vol_char * int(io_status.volume / 100.0 * 14),
+        self.line[1] = ' {}{} '.format(vol_full_char * int(io_status.volume / 100.0 * 14),
                                        vol_empty_char * int((100.0 - io_status.volume) / 100.0 * 14))
 
         # backlight change timeout expired: set backlight with no timeout
