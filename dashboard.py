@@ -180,11 +180,9 @@ BIGNUMMATRIX = {
 class Dashboard:
     def __init__(self):
         self._current_program = -1
-        self._is_backlit = True
-        self._backlight_change = datetime.datetime(9999, 12, 31)
         self._message_timeout = datetime.datetime(9999, 12, 31)
-        self.line = self.old_line = [''] * LCD_ROWS
-
+        self.line = [''] * LCD_ROWS
+        self.old_line = [''] * LCD_ROWS
         self.lcd = None
         self.refresh_display()
 
@@ -245,7 +243,7 @@ class Dashboard:
         # |     Play >     |
         # | ______________ |
         # +----------------+
-        self.line[0] = '     {}     '.format((' Mute ' if io_status.is_muted else 'Play >'))
+        self.line[0] = '     {}     '.format((' Mute ' if io_status.is_muted else 'Play ¶'))
         if io_status.message != '':
             self.line[1] = ' \xA5 \xA5 \xA5 ' + \
                            io_status.message + ' \xA5 \xA5 \xA5'
@@ -254,14 +252,12 @@ class Dashboard:
                                            "_" * int((100.0 - io_status.volume) / 100.0 * 14))
 
         # backlight change timeout expired: set backlight with no timeout
-        if datetime.datetime.now() > self._backlight_change:
-            self.set_backlight(not self._is_backlit)
+        self.lcd.set_backlight(True)
 
-        if self._is_backlit:
-            if CURRENT_CHARSET != NEW_CHARSET:
-                CURRENT_CHARSET = NEW_CHARSET
-                self.cleanup()
-                self._load_charset()
+        if CURRENT_CHARSET != NEW_CHARSET:
+            CURRENT_CHARSET = NEW_CHARSET
+            self.cleanup()
+            self._load_charset()
 
         blink_off = datetime.datetime.now().second % 2 != 0
 
@@ -269,18 +265,17 @@ class Dashboard:
         for no in range(0, LCD_ROWS):
             tmp_line = self.line[no]
             if blink_off:
-                tmp_line = tmp_line.replace('\xA5', ' ')
-                tmp_line = tmp_line.replace('^', ' ')
-                tmp_line = tmp_line.replace('@', ' ')
-                tmp_line = tmp_line.replace('¶', ' ')
+                tmp_line = (tmp_line.replace('\xA5', ' ')
+                            .replace('^', ' ')
+                            .replace('@', ' ')
+                            .replace('¶', ' '))
             else:
-                tmp_line = tmp_line.replace('^', ':')
-                tmp_line = tmp_line.replace('@', '<')
-                tmp_line = tmp_line.replace('¶', '>')
-            if self._is_backlit:
-                if self.old_line[no] != tmp_line:
-                    self.old_line[no] = tmp_line
-                    self.lcd.lcd_display_string(tmp_line, no)
+                tmp_line = (tmp_line.replace('^', ':')
+                            .replace('@', '<')
+                            .replace('¶', '>'))
+            if self.old_line[no] != tmp_line:
+                self.old_line[no] = tmp_line
+                self.lcd.lcd_display_string(tmp_line, no)
             tmp_lines[no] = tmp_line
 
         self.echo_display(tmp_lines)
@@ -298,25 +293,6 @@ class Dashboard:
                 self.lcd.lcd_display_string(' ' * LCD_COLUMNS, row)
         self.echo_display([' ' * LCD_COLUMNS] * LCD_ROWS)
 
-    def set_backlight(self, state, timeout=datetime.datetime(9999, 12, 31)):
-        global CURRENT_CHARSET, NEW_CHARSET
-
-        if DISPLAY_TYPE == NONE or PAUSED:
-            return
-
-        # set backlight and re-initialize LCD screen text on backlight on
-        if state and not self._is_backlit:
-            if CURRENT_CHARSET != NEW_CHARSET:
-                CURRENT_CHARSET = NEW_CHARSET
-                self.cleanup()
-                self._load_charset()
-
-            for row in range(0, LCD_ROWS):
-                self.lcd.lcd_display_string(self.line[row], row)
-        self.lcd.set_backlight(state)
-
-        self._is_backlit = state
-        self._backlight_change = timeout
 
     def echo_display(self, lines):
         # move cursor home
@@ -329,9 +305,7 @@ class Dashboard:
                              '0', '.']
 
         print(' ' * (LCD_COLUMNS + 4))
-        print(' +' +
-              ('-' * LCD_COLUMNS) + '+ ' if self._is_backlit else
-              ' +' + '- ' * int(LCD_COLUMNS / 2) + '+ ')
+        print(' +' + ('-' * LCD_COLUMNS) + '+ ')
         for row in range(0, LCD_ROWS):
             count = 0
             cur_row = lines[row]
@@ -339,9 +313,7 @@ class Dashboard:
                 cur_row = cur_row.replace(char, replace_chars[count])
                 count += 1
             print(' |{}| '.format(cur_row))
-        print(' +' + ('-' * LCD_COLUMNS) + '+ ' if self._is_backlit
-              else ' +' + '- ' * int(
-            LCD_COLUMNS / 2) + '+ ')
+        print(' +' + ('-' * LCD_COLUMNS) + '+ ')
         print(' ' * int(LCD_COLUMNS + 4))
         # restore cursor pos
         sys.stdout.write("\x1b8")
