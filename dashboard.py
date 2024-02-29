@@ -242,13 +242,13 @@ class Dashboard:
         # | ______________ |
         # +----------------+
         # self.set_charset(CHARSET_SYMBOL) # change charset
-        self.line[0] = '     {}     '.format(' Mute ' if io_status.is_muted else 'Play >')
+        self.line[0] = '     {}     '.format((' Mute ' if io_status.is_muted else 'Play >'))
         if io_status.message != '':
             self.line[1] = ' \xA5 \xA5 \xA5 ' + \
                            io_status.message + ' \xA5 \xA5 \xA5'
         else:
-            self.line[1] = ' {}{} '.format("\xFF" * int(io_status.volume / 100 * 14),
-                                           "_" * int((100 - io_status.volume) / 100 * 14))
+            self.line[1] = ' {}{} '.format("\xFF" * int(io_status.volume / 100.0 * 14),
+                                           "_" * int((100.0 - io_status.volume) / 100.0 * 14))
 
         # if program is changed, reset positions
         if change:
