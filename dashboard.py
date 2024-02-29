@@ -224,7 +224,7 @@ class Dashboard:
             if io_status:
                 # force lines refresh
                 self.old_line = [''] * LCD_ROWS
-                self.update(io_status)
+                self.update()
         except KeyboardInterrupt:
             raise
         except Exception:
@@ -237,65 +237,24 @@ class Dashboard:
         NEW_CHARSET = charset
 
     def update_content(self, io_status, change=False):
-        if not config.MODULE_LCD or PAUSED:
-            return
-
-        # bignum view
-        if config.TEST_MODE == 2:
-            # bignum test mode
-            clock = '0123456789\''
+        # +----------------+
+        # |     Play >     |
+        # | ______________ |
+        # +----------------+
+        # self.set_charset(CHARSET_SYMBOL) # change charset
+        self.line[0] = '     {}     '.format(' Mute ' if io_status.is_muted else 'Play >')
+        if io_status.message != '':
+            self.line[1] = ' \xA5 \xA5 \xA5 ' + \
+                           io_status.message + ' \xA5 \xA5 \xA5'
         else:
-            clock = strftime("%H:%M")
-
-        main_temp1 = main_temp2 = ''
-        for char in clock:
-            try:
-                if char == '.' \
-                        or char == ':' \
-                        or char == '\'':
-                    main_temp1 = main_temp1[:-1]
-                    main_temp2 = main_temp2[:-1]
-                main_temp1 += BIGNUMMATRIX[char][0]
-                main_temp2 += BIGNUMMATRIX[char][1]
-            except Exception:
-                traceback.print_exc()
-                pass
-
-        if False and io_status.message == '':
-            # +----------------+
-            # |_ XXX XXX XXX°  |
-            # |M XXX XXX.XXX   |
-            # +----------------+
-            self.set_charset(CHARSET_BIGNUM)
-
-            if self._current_program % 4 == 0:
-                self.line[0] = '{} {}'.format(heating_icon,
-                                              main_temp1.center(14))
-                self.line[1] = '{} {}'.format(mode_icon,
-                                              main_temp2.center(14))
-            else:
-                self.line[0] = main_temp1.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
-                self.line[1] = main_temp2.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
-        else:
-            # +----------------+
-            # |     Play >     |
-            # | ______________ |
-            # +----------------+
-            # self.set_charset(CHARSET_SYMBOL) # change charset
-            self.line[0] = '     {}     '.format(' Mute ' if io_status.is_muted else 'Play >')
-            if io_status.message != '':
-                self.line[1] = ' \xA5 \xA5 \xA5 ' + \
-                               io_status.message + ' \xA5 \xA5 \xA5'
-            else:
-                self.line[1] = ' {}{} '.format(
-                    "\xFF" * int(io_status.volume / 100 * 14),
-                    "_" * int((100 - io_status.volume) / 100 * 14))
+            self.line[1] = ' {}{} '.format("\xFF" * int(io_status.volume / 100 * 14),
+                                           "_" * int((100 - io_status.volume) / 100 * 14))
 
         # if program is changed, reset positions
         if change:
             self.position = [-LCD_LINE_DELAY] * LCD_ROWS
 
-    def update(self, refresh_requested=False, draw=True):
+    def update(self):
         global CURRENT_CHARSET, NEW_CHARSET
         if DISPLAY_TYPE == NONE or PAUSED:
             return 0
@@ -307,7 +266,7 @@ class Dashboard:
         if datetime.datetime.now() > self._backlight_change:
             self.set_backlight(not self._is_backlit)
 
-        if draw and (self._is_backlit or refresh_requested):
+        if self._is_backlit:
             if CURRENT_CHARSET != NEW_CHARSET:
                 CURRENT_CHARSET = NEW_CHARSET
                 self.cleanup()
@@ -349,7 +308,7 @@ class Dashboard:
                 tmp_lines[no] = tmp_lines[no].replace('@', '<')
                 tmp_lines[no] = tmp_lines[no].replace('¶', '>')
 
-            if draw and (self._is_backlit or refresh_requested):
+            if self._is_backlit:
                 if self.old_line[no] != tmp_lines[no]:
                     self.old_line[no] = tmp_lines[no]
                     self.lcd.lcd_display_string(tmp_lines[no], no)
