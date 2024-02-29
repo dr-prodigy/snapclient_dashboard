@@ -27,8 +27,7 @@ def main():
         try:
             rotary.scan(io_status)
             if (datetime.datetime.now() - refresh_start_time).total_seconds() > .2:
-                lcd.update_content(io_status)
-                lcd.update()
+                lcd.update(io_status)
                 refresh_start_time = datetime.datetime.now()
             else:
                 time.sleep(.01)

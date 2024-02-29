@@ -182,10 +182,8 @@ class Dashboard:
         self._current_program = -1
         self._is_backlit = True
         self._backlight_change = datetime.datetime(9999, 12, 31)
-        self._command = ''
         self._message_timeout = datetime.datetime(9999, 12, 31)
         self.line = self.old_line = [''] * LCD_ROWS
-        self.position = [-LCD_LINE_DELAY] * LCD_ROWS
 
         self.lcd = None
         self.refresh_display()
@@ -207,7 +205,7 @@ class Dashboard:
             elif DISPLAY_TYPE == I2C_LCD:
                 self.lcd.lcd_load_custom_chars(BIGNUMDATA)
 
-    def refresh_display(self, io_status = None):
+    def refresh_display(self, io_status=None):
         global PAUSED
         try:
             PAUSED = False
@@ -236,12 +234,17 @@ class Dashboard:
         global NEW_CHARSET
         NEW_CHARSET = charset
 
-    def update_content(self, io_status, change=False):
+    def update(self, io_status):
+        global CURRENT_CHARSET, NEW_CHARSET
+        if DISPLAY_TYPE == NONE or PAUSED:
+            return 0
+
+        start_time = datetime.datetime.now()
+
         # +----------------+
         # |     Play >     |
         # | ______________ |
         # +----------------+
-        # self.set_charset(CHARSET_SYMBOL) # change charset
         self.line[0] = '     {}     '.format((' Mute ' if io_status.is_muted else 'Play >'))
         if io_status.message != '':
             self.line[1] = ' \xA5 \xA5 \xA5 ' + \
@@ -249,18 +252,6 @@ class Dashboard:
         else:
             self.line[1] = ' {}{} '.format("\xFF" * int(io_status.volume / 100.0 * 14),
                                            "_" * int((100.0 - io_status.volume) / 100.0 * 14))
-
-        # if program is changed, reset positions
-        if change:
-            self.position = [-LCD_LINE_DELAY] * LCD_ROWS
-
-    def update(self):
-        global CURRENT_CHARSET, NEW_CHARSET
-        if DISPLAY_TYPE == NONE or PAUSED:
-            return 0
-
-        start_time = datetime.datetime.now()
-        tmp_lines = [''] * LCD_ROWS
 
         # backlight change timeout expired: set backlight with no timeout
         if datetime.datetime.now() > self._backlight_change:
@@ -274,44 +265,23 @@ class Dashboard:
 
         blink_off = datetime.datetime.now().second % 2 != 0
 
-        # lines update
-        if datetime.datetime.now() >= self._message_timeout:
-            self._command = ''
-
+        tmp_lines = [''] * LCD_ROWS
         for no in range(0, LCD_ROWS):
-            if self._command:
-                if no == int(LCD_ROWS / 2):
-                    tmp_lines[no] = self._command.center(LCD_COLUMNS)
-                else:
-                    tmp_lines[no] = ' ' * LCD_COLUMNS
-            else:
-                if len(self.line[no]) > LCD_COLUMNS:
-                    self.position[no] += 1
-                    if self.position[no] > len(
-                            self.line[no]) - LCD_COLUMNS + LCD_LINE_DELAY:
-                        self.position[no] = -LCD_LINE_DELAY
-                position = 0 if self.position[no] < 0 else \
-                    len(self.line[no]) - LCD_COLUMNS if self.position[no] > \
-                    len(self.line[no]) - LCD_COLUMNS else \
-                    self.position[no]
-                cur_line = self.line[no][position:len(self.line[no])].ljust(
-                    LCD_COLUMNS)[0:LCD_COLUMNS]
-                tmp_lines[no] = cur_line
-
+            tmp_line = self.line[no]
             if blink_off:
-                tmp_lines[no] = tmp_lines[no].replace('\xA5', ' ')
-                tmp_lines[no] = tmp_lines[no].replace('^', ' ')
-                tmp_lines[no] = tmp_lines[no].replace('@', ' ')
-                tmp_lines[no] = tmp_lines[no].replace('¶', ' ')
+                tmp_line = tmp_line.replace('\xA5', ' ')
+                tmp_line = tmp_line.replace('^', ' ')
+                tmp_line = tmp_line.replace('@', ' ')
+                tmp_line = tmp_line.replace('¶', ' ')
             else:
-                tmp_lines[no] = tmp_lines[no].replace('^', ':')
-                tmp_lines[no] = tmp_lines[no].replace('@', '<')
-                tmp_lines[no] = tmp_lines[no].replace('¶', '>')
-
+                tmp_line = tmp_line.replace('^', ':')
+                tmp_line = tmp_line.replace('@', '<')
+                tmp_line = tmp_line.replace('¶', '>')
             if self._is_backlit:
-                if self.old_line[no] != tmp_lines[no]:
-                    self.old_line[no] = tmp_lines[no]
-                    self.lcd.lcd_display_string(tmp_lines[no], no)
+                if self.old_line[no] != tmp_line:
+                    self.old_line[no] = tmp_line
+                    self.lcd.lcd_display_string(tmp_line, no)
+            tmp_lines[no] = tmp_line
 
         self.echo_display(tmp_lines)
         return (datetime.datetime.now() - start_time).total_seconds()
