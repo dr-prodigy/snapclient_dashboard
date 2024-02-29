@@ -22,11 +22,10 @@ rotary = rotary_encoder.Rotary()
 
 def main():
     while True:
+        # save refresh start time
+        refresh_start_time = datetime.datetime.now()
         try:
-            # save cycle start time
-            cycle_start_time = datetime.datetime.now()
             rotary.scan(io_status)
-            lcd.update_content(io_status)
 
         except (KeyboardInterrupt, SystemExit):
             # cleanup
@@ -37,10 +36,12 @@ def main():
             log_stderr(traceback.format_exc())
         finally:
             try:
-                cycle_duration = (datetime.datetime.now() - cycle_start_time)\
-                    .total_seconds() + lcd.update(io_status)
-                if cycle_duration < .05:
-                    time.sleep(.05 - cycle_duration)
+                if (datetime.datetime.now() - refresh_start_time).total_seconds() > .2:
+                    lcd.update_content(io_status)
+                    lcd.update(io_status)
+                    refresh_start_time = datetime.datetime.now()
+                else:
+                    time.sleep(.01)
 
             except (KeyboardInterrupt, SystemExit):
                 # cleanup
