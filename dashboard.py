@@ -236,7 +236,7 @@ class Dashboard:
         global NEW_CHARSET
         NEW_CHARSET = charset
 
-    def update_content(self, io_status, change=True):
+    def update_content(self, io_status, change=False):
         if not config.MODULE_LCD or PAUSED:
             return
 
