@@ -184,8 +184,7 @@ class Dashboard:
         self._backlight_change = datetime.datetime(9999, 12, 31)
         self._command = ''
         self._message_timeout = datetime.datetime(9999, 12, 31)
-        self.line = [''] * LCD_ROWS
-        self.old_line = [''] * LCD_ROWS
+        self.line = self.old_line = [''] * LCD_ROWS
         self.position = [-LCD_LINE_DELAY] * LCD_ROWS
 
         self.lcd = None
@@ -215,9 +214,7 @@ class Dashboard:
             if DISPLAY_TYPE == GPIO_CharLCD:
                 # initialize display
                 if self.lcd is None:
-                    self.lcd = RPiGPIO_CharLCD(LCD_RS, LCD_EN, LCD_D4, LCD_D5,
-                                           LCD_D6, LCD_D7,
-                                           LCD_COLUMNS, LCD_ROWS)
+                    self.lcd = RPiGPIO_CharLCD(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7, LCD_COLUMNS, LCD_ROWS)
             elif DISPLAY_TYPE == I2C_LCD:
                 # initialize display
                 self.lcd = I2C_LCD_driver.lcd(I2C_ADDRESS, I2C_BUS)
@@ -285,12 +282,14 @@ class Dashboard:
             # | ______________ |
             # +----------------+
             # self.set_charset(CHARSET_SYMBOL) # change charset
-            self.line[0] = '     Play >     '
+            self.line[0] = '     {}     '.format(' Mute ' if io_status.is_muted else 'Play >')
             if io_status.message != '':
                 self.line[1] = ' \xA5 \xA5 \xA5 ' + \
                                io_status.message + ' \xA5 \xA5 \xA5'
             else:
-                self.line[1] = ' ______________ '
+                self.line[1] = ' {}{} '.format(
+                    "\xFF" * int(io_status.volume / 100 * 14),
+                    "_" * int((100 - io_status.volume) / 100 * 14))
 
         # if program is changed, reset positions
         if change:

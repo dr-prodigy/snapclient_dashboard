@@ -12,7 +12,6 @@ hide_message_time = None
 class Input:
     def __init__(self):
         self.last_update = datetime.datetime.now().isoformat()
-        self.data = ''
 
 
 class Status:
@@ -23,6 +22,9 @@ class Status:
         self.last_change = datetime.datetime.now().isoformat()
         # gui
         self.message = ''
+        self.volume = 50
+        self.is_muted = False
+        self.server_status = None
         hide_message_time = datetime.datetime.now()
 
     def get_output(self):
