@@ -27,8 +27,8 @@ class Rotary:
     def scan(self, io_status):
         clkState = GPIO.input(ROTARY_DT)
         dtState = GPIO.input(ROTARY_CLK)
-        if clkState != self.clkLastState:
-            if dtState == clkState:
+        if clkState != self.clkLastState and clkState == GPIO.HIGH:
+            if dtState == GPIO.HIGH:
                 io_status.volume += 2 if io_status.volume < 100 else 0
             else:
                 io_status.volume -= 2 if io_status.volume > 0 else 0
