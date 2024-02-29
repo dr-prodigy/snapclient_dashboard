@@ -41,11 +41,11 @@ NEW_CHARSET = CHARSET_BIGNUM
 # RPiGPIO_CharLCD pin configuration:
 LCD_RS = 4  # Note this might need to be changed to 21 for older revision Pi's
 LCD_EN = 17
-LCD_D4 = 15
-LCD_D5 = 16
-LCD_D6 = 18
-LCD_D7 = 22
-LCD_BACKLIGHT = 4  # NOT USED
+LCD_D4 = 22
+LCD_D5 = 23
+LCD_D6 = 24
+LCD_D7 = 25
+LCD_BACKLIGHT = 26  # NOT USED
 
 # I2C_LCD configuration
 # i2c bus (0 -- original Pi, 1 -- Rev 2 Pi)
