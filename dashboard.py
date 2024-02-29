@@ -244,13 +244,15 @@ class Dashboard:
         # | ______________ |
         # +----------------+
         status = 'Play ¶'
-        vol_char = '\xFF'
+        vol_full_char = '\xFF'
+        vol_empty_char = '_'
         if io_status.is_muted:
             status = ' Mute '
-            vol_char = '@'
+            vol_char = '#'
+            vol_empty_char = '^'
         self.line[0] = '     {}     '.format(status)
         self.line[1] = ' {}{} '.format(vol_char * int(io_status.volume / 100.0 * 14),
-                                       "_" * int((100.0 - io_status.volume) / 100.0 * 14))
+                                       vol_empty_char * int((100.0 - io_status.volume) / 100.0 * 14))
 
         # backlight change timeout expired: set backlight with no timeout
         self.lcd.set_backlight(True)
@@ -268,11 +270,11 @@ class Dashboard:
             if blink_off:
                 tmp_line = (tmp_line.replace('\xA5', ' ')
                             .replace('^', ' ')
-                            .replace('@', ' ')
+                            .replace('#', ' ')
                             .replace('¶', ' '))
             else:
-                tmp_line = (tmp_line.replace('^', ':')
-                            .replace('@', '\xFF')
+                tmp_line = (tmp_line.replace('^', '_')
+                            .replace('#', '\xFF')
                             .replace('¶', '>'))
             if self.old_line[no] != tmp_line:
                 self.old_line[no] = tmp_line
