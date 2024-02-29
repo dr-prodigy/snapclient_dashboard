@@ -16,8 +16,8 @@ clkLastState = GPIO.input(clk)
 
 try:
     while True:
-        clkState = GPIO.input(config.GPIO_ROTARY_CLK)
-        dtState = GPIO.input(config.GPIO_ROTARY_DT)
+        clkState = GPIO.input(config.GPIO_ROTARY[0])
+        dtState = GPIO.input(config.GPIO_ROTARY[1])
         if clkState != clkLastState:
             if dtState != clkState:
                 counter += 1

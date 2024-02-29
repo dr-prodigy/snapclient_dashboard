@@ -38,14 +38,13 @@ CURRENT_CHARSET = None
 # NEW_CHARSET = CHARSET_SYMBOL # change charset
 NEW_CHARSET = CHARSET_BIGNUM
 
-# RPiGPIO_CharLCD pin configuration:
-LCD_RS = 4  # Note this might need to be changed to 21 for older revision Pi's
-LCD_EN = 17
-LCD_D4 = 22
-LCD_D5 = 23
-LCD_D6 = 24
-LCD_D7 = 25
-LCD_BACKLIGHT = 26  # NOT USED
+# RPiGPIO_CharLCD pin configuration
+LCD_RS = config.GPIO_LCD[0]
+LCD_EN = config.GPIO_LCD[1]
+LCD_D4 = config.GPIO_LCD[2]
+LCD_D5 = config.GPIO_LCD[3]
+LCD_D6 = config.GPIO_LCD[4]
+LCD_D7 = config.GPIO_LCD[5]
 
 # I2C_LCD configuration
 # i2c bus (0 -- original Pi, 1 -- Rev 2 Pi)
@@ -218,8 +217,7 @@ class Dashboard:
                 if self.lcd is None:
                     self.lcd = RPiGPIO_CharLCD(LCD_RS, LCD_EN, LCD_D4, LCD_D5,
                                            LCD_D6, LCD_D7,
-                                           LCD_COLUMNS, LCD_ROWS,
-                                           LCD_BACKLIGHT)
+                                           LCD_COLUMNS, LCD_ROWS)
             elif DISPLAY_TYPE == I2C_LCD:
                 # initialize display
                 self.lcd = I2C_LCD_driver.lcd(I2C_ADDRESS, I2C_BUS)
