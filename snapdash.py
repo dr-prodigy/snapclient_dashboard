@@ -23,7 +23,7 @@ lcd = dashboard.Dashboard()
 def main():
     global sig_command
 
-    # lcd.refresh_display(io_status)
+    update_lcd_content()
     while True:
         try:
             # save cycle start time
