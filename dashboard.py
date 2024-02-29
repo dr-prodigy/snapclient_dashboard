@@ -252,7 +252,7 @@ class Dashboard:
             vol_empty_char = '^'
         self.line[0] = '     {}     '.format(status)
         self.line[1] = ' {}{} '.format(vol_full_char * int(io_status.volume / 100.0 * 14),
-                                       vol_empty_char * int((100.0 - io_status.volume) / 100.0 * 14))
+                                       vol_empty_char * 14 - int(io_status.volume / 100.0 * 14))
 
         # backlight change timeout expired: set backlight with no timeout
         self.lcd.set_backlight(True)
