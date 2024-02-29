@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import json
+import datetime
+
+import config
+
+hide_message_time = None
+
+
+class Input:
+    def __init__(self):
+        self.last_update = datetime.datetime.now().isoformat()
+        self.data = ''
+
+
+class Status:
+    def __init__(self):
+        global hide_message_time
+        # general
+        self.last_update = datetime.datetime.now().isoformat()
+        self.last_change = datetime.datetime.now().isoformat()
+        # gui
+        self.message = ''
+        hide_message_time = datetime.datetime.now()
+
+    def get_output(self):
+        return json.dumps(self.__dict__, indent=0)
+
+    def update(self, current_time):
+        if self.message != '' and hide_message_time <= current_time:
+            self.message = ''
+            self.last_change == current_time.isoformat()
+
+    def send_message(self, message):
+        global hide_message_time
+
+        self.message = message.encode('utf-8')
+        self.last_change = datetime.datetime.now().isoformat()
+        hide_message_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
+
+    def reset_message(self):
+        global hide_message_time
+
+        self.message = ''
+        self.last_change = datetime.datetime.now().isoformat()
+        hide_message_time = datetime.datetime.now()
