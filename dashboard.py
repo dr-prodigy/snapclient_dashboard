@@ -245,7 +245,7 @@ class Dashboard:
         # +----------------+
         status = 'Play ¶'
         vol_full_char = '\xFF'
-        vol_empty_char = '_'
+        vol_empty_char = '\xDB'
         if io_status.is_muted:
             status = ' Mute '
             vol_full_char = '#'
@@ -273,7 +273,7 @@ class Dashboard:
                             .replace('#', ' ')
                             .replace('¶', ' '))
             else:
-                tmp_line = (tmp_line.replace('^', '_')
+                tmp_line = (tmp_line.replace('^', '\xDB')
                             .replace('#', '\xFF')
                             .replace('¶', '>'))
             if self.old_line[no] != tmp_line:
