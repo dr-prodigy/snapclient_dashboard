@@ -1,4 +1,5 @@
 from time import sleep
+import keyboard
 
 import config
 
@@ -12,6 +13,9 @@ ROTARY_DT = config.GPIO_ROTARY[0]
 ROTARY_CLK = config.GPIO_ROTARY[1]
 ROTARY_SW = config.GPIO_ROTARY[2]
 
+LEFT = 0
+RIGHT = 1
+BUTTON = 2
 
 class Rotary:
     def __init__(self):
@@ -22,23 +26,31 @@ class Rotary:
 
         counter = 0
         self.clkLastState = GPIO.input(ROTARY_CLK)
-        self.buttonLastState = GPIO.input(ROTARY_SW)
+        self.button_last_state = GPIO.input(ROTARY_SW)
 
     def scan(self, io_status):
-        clkState = GPIO.input(ROTARY_DT)
-        dtState = GPIO.input(ROTARY_CLK)
-        if clkState != self.clkLastState and clkState == GPIO.HIGH:
-            if dtState == GPIO.HIGH:
-                io_status.volume += 2 if io_status.volume < 100 else 0
+        clk_state = GPIO.input(ROTARY_DT)
+        dt_state = GPIO.input(ROTARY_CLK)
+        if clk_state != self.clkLastState and clk_state == GPIO.HIGH:
+            if dt_state == GPIO.HIGH:
+                return RIGHT
             else:
-                io_status.volume -= 2 if io_status.volume > 0 else 0
-        self.clkLastState = clkState
+                return LEFT
+        self.clkLastState = clk_state
 
-        buttonState = GPIO.input(ROTARY_SW)
-        if buttonState != self.buttonLastState:
-            if buttonState == GPIO.LOW:
-                io_status.is_muted = not io_status.is_muted
-            self.buttonLastState = buttonState
+        button_state = GPIO.input(ROTARY_SW)
+        if button_state != self.button_last_state:
+            self.button_last_state = button_state
+            if button_state == GPIO.LOW:
+                return BUTTON
+
+        if keyboard.is_pressed("a"):
+            return LEFT
+        if keyboard.is_pressed("d"):
+            return RIGHT
+        if keyboard.is_pressed(" "):
+            return BUTTON
+        return None
 
     def cleanup(self):
         GPIO.cleanup()

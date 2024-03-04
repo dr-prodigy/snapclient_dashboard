@@ -22,10 +22,18 @@ rotary = rotary_encoder.Rotary()
 
 def main():
     refresh_start_time = datetime.datetime.now()
+    command = None
     while True:
         # save refresh start time
         try:
-            rotary.scan(io_status)
+            match rotary.scan(io_status):
+                case rotary_encoder.RIGHT:
+                    io_status.volume += 2 if io_status.volume < 100 else 0
+                case rotary_encoder.LEFT:
+                    io_status.volume -= 2 if io_status.volume > 0 else 0
+                case rotary_encoder.BUTTON:
+                    io_status.is_muted = not io_status.is_muted
+
             if (datetime.datetime.now() - refresh_start_time).total_seconds() > .2:
                 lcd.update(io_status)
                 refresh_start_time = datetime.datetime.now()
