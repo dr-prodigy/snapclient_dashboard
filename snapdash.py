@@ -26,7 +26,7 @@ def main():
     while True:
         # save refresh start time
         try:
-            command = rotary.scan(io_status)
+            command = rotary.scan()
             if command == rotary_encoder.RIGHT:
                 io_status.volume += 2 if io_status.volume < 100 else 0
             elif command == rotary_encoder.LEFT:
