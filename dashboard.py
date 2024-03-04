@@ -243,16 +243,15 @@ class Dashboard:
         # |     Play >     |
         # | ______________ |
         # +----------------+
-        status = 'Play ¶'
-        vol_full_char = '\xFF'
-        vol_empty_char = '\xDB'
+        status = '&Play >&'
+        vol_blink = ''
         if io_status.is_muted:
             status = ' Mute '
-            vol_full_char = '#'
-            vol_empty_char = '^'
         self.line[0] = '     {}     '.format(status)
-        self.line[1] = ' {}{} '.format(vol_full_char * int(io_status.volume / 100.0 * 14),
-                                       vol_empty_char * (14 - int(io_status.volume / 100.0 * 14)))
+        self.line[1] = ' {}{}{}{} '.format(vol_blink,
+                                           '\xFF' * int(io_status.volume / 100.0 * 14),
+                                           '\xDB' * (14 - int(io_status.volume / 100.0 * 14)),
+                                           vol_blink)
 
         # backlight change timeout expired: set backlight with no timeout
         self.lcd.set_backlight(True)
@@ -266,16 +265,13 @@ class Dashboard:
 
         tmp_lines = [''] * LCD_ROWS
         for no in range(0, LCD_ROWS):
-            tmp_line = self.line[no]
-            if blink_off:
-                tmp_line = (tmp_line.replace('\xA5', ' ')
-                            .replace('^', ' ')
-                            .replace('#', ' ')
-                            .replace('¶', ' '))
-            else:
-                tmp_line = (tmp_line.replace('^', '\xDB')
-                            .replace('#', '\xFF')
-                            .replace('¶', '>'))
+            tmp_line = ''
+            blinked = False
+            for ch in self.line[no]:
+                if ch == '&':
+                    blinked = not blinked
+                else:
+                    tmp_line += ' ' if blinked and blink_off else ch
             if self.old_line[no] != tmp_line:
                 self.old_line[no] = tmp_line
                 self.lcd.lcd_display_string(tmp_line, no)
@@ -301,18 +297,16 @@ class Dashboard:
         # move cursor home
         sys.stdout.write("\x1b[H")
         if CURRENT_CHARSET == CHARSET_SYMBOL:
-            replace_chars = ['*', '+', '=', 'A', 'M', '?', '?', '?', '>', '°',
-                             '?', '.']
+            replace_chars = ['*', '+', '=', 'A', 'M', '?', '?', '?', '#', 'O']
         else:
-            replace_chars = ['*', '+', '=', 'A', 'M', '-', '_', '=', '>', '°',
-                             '0', '.']
+            replace_chars = ['*', '+', '=', 'A', 'M', '-', '_', '=', '#', 'O']
 
         print(' ' * (LCD_COLUMNS + 4))
         print(' +' + ('-' * LCD_COLUMNS) + '+ ')
         for row in range(0, LCD_ROWS):
             count = 0
             cur_row = lines[row]
-            for char in '\x00\x01\x02\x03\x04\x05\x06\x07\x7E\xDF\xFF\xA5':
+            for char in '\x00\x01\x02\x03\x04\x05\x06\x07\xDB\xFF':
                 cur_row = cur_row.replace(char, replace_chars[count])
                 count += 1
             print(' |{}| '.format(cur_row))
