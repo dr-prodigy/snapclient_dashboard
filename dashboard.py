@@ -247,6 +247,7 @@ class Dashboard:
         vol_blink = ''
         if io_status.is_muted:
             status = ' Mute '
+            vol_blink = '&'
         self.line[0] = '     {}     '.format(status)
         self.line[1] = ' {}{}{}{} '.format(vol_blink,
                                            '\xFF' * int(io_status.volume / 100.0 * 14),
