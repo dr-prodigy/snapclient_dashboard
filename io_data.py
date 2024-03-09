@@ -24,8 +24,10 @@ class Status:
         self.message = ''
         self.volume = 50
         self.is_muted = False
-        self.server_status = None
         hide_message_time = datetime.datetime.now()
+
+        self.sources = ['Media', 'Spotify']
+        self.current_source = 0
 
     def get_output(self):
         return json.dumps(self.__dict__, indent=0)

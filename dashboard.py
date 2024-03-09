@@ -8,8 +8,7 @@ import math
 from time import strftime
 
 import config
-
-from utils import log_stderr
+from utils import log_stderr, LEFT, RIGHT, BUTTON
 
 NONE = 0
 GPIO_CharLCD = 1
@@ -176,6 +175,13 @@ BIGNUMMATRIX = {
            ' '],
 }
 
+# menu id: [show function, 'Menu desc', button change function, post change menu id, parent menu id],
+menu = {
+    1: ['show_source', 'Source', 'change_source', 1, -1],
+    2: ['show_status', 'Snapcast', 'change_status', 2, -1],
+    3: ['show_volume', 'Volume', None, 31, -1],
+    31: ['show_volume', 'Volume', 'change_volume', 3, 3],
+}
 
 class Dashboard:
     def __init__(self):
@@ -185,6 +191,8 @@ class Dashboard:
         self.old_line = [''] * LCD_ROWS
         self.lcd = None
         self.refresh_display()
+        self.current_menu_item = 2
+        self.current_source = 0
 
     def _load_charset(self):
         if PAUSED:
@@ -239,21 +247,6 @@ class Dashboard:
 
         start_time = datetime.datetime.now()
 
-        # +----------------+
-        # |     Play >     |
-        # | ______________ |
-        # +----------------+
-        status = '&Play >&'
-        vol_blink = ''
-        if io_status.is_muted:
-            status = ' Mute '
-            vol_blink = '&'
-        self.line[0] = '     {}     '.format(status)
-        self.line[1] = ' {}{}{}{} '.format(vol_blink,
-                                           '\xFF' * int(io_status.volume / 100.0 * 14),
-                                           '\xDB' * (14 - int(io_status.volume / 100.0 * 14)),
-                                           vol_blink)
-
         # backlight change timeout expired: set backlight with no timeout
         self.lcd.set_backlight(True)
 
@@ -273,6 +266,9 @@ class Dashboard:
                     blinked = not blinked
                 else:
                     tmp_line += ' ' if blinked and blink_off else ch
+
+            tmp_line = tmp_line.center(LCD_COLUMNS)
+
             if self.old_line[no] != tmp_line:
                 self.old_line[no] = tmp_line
                 self.lcd.lcd_display_string(tmp_line, no)
@@ -292,7 +288,6 @@ class Dashboard:
             for row in range(0, LCD_ROWS):
                 self.lcd.lcd_display_string(' ' * LCD_COLUMNS, row)
         self.echo_display([' ' * LCD_COLUMNS] * LCD_ROWS)
-
 
     def echo_display(self, lines):
         # move cursor home
@@ -315,3 +310,65 @@ class Dashboard:
         print(' ' * int(LCD_COLUMNS + 4))
         # restore cursor pos
         sys.stdout.write("\x1b8")
+
+    def menu_select_old(self, io_status):
+        # +----------------+
+        # |     Play >     |
+        # | ______________ |
+        # +----------------+
+        status = '&Play >&'
+        vol_blink = ''
+        if io_status.is_muted:
+            status = ' Mute '
+            vol_blink = '&'
+        self.line[0] = '     {}     '.format(status)
+
+    # menu id: [show function, 'Menu desc', button change function, post change menu id, parent menu id],
+    def menu_update(self, io_status):
+        menu_item = menu[self.current_menu_item]
+        self.line[0] = menu_item[1]
+        if menu_item[0] == 'show_source':
+            self.line[1] = '&{}&'.format(io_status.sources[io_status.current_source])
+        elif menu_item[0] == 'show_status':
+            if io_status.is_muted:
+                self.line[1] = '&Mute&'
+            else:
+                self.line[1] = 'Playing'
+        elif menu_item[0] == 'show_volume':
+            vol_blink = ''
+            if menu_item[2]:
+                vol_blink = '&'
+            self.line[1] = ' {}{}{}{} '.format(vol_blink,
+                                               '\xFF' * int(io_status.volume / 100.0 * 14),
+                                               vol_blink,
+                                               '\xDB' * (14 - int(io_status.volume / 100.0 * 14)))
+        else:
+            self.line[1] = menu[self.current_menu_item][1]
+
+    def menu_action(self, io_status, command):
+        action = menu[self.current_menu_item][2]
+        if command == RIGHT:
+            if action == 'change_volume':
+                io_status.volume += 2 if io_status.volume < 100 else 0
+            elif(self.current_menu_item + 1) in menu:
+                self.current_menu_item += 1
+        elif command == LEFT:
+            if action == 'change_volume':
+                io_status.volume -= 2 if io_status.volume > 0 else 0
+            elif (self.current_menu_item - 1) in menu:
+                self.current_menu_item -= 1
+        elif command == BUTTON:
+            if action == 'change_source':
+                if io_status.current_source < len(io_status.sources) - 1:
+                    io_status.current_source += 1
+                else:
+                    io_status.current_source = 0
+            elif action == 'change_status':
+                io_status.is_muted = not io_status.is_muted
+            elif action == 'change_volume':
+                pass
+
+            self.current_menu_item = menu[self.current_menu_item][3]
+
+
+        self.menu_update(io_status)

@@ -1,7 +1,7 @@
 from time import sleep
 
 import config
-import utils
+from utils import LEFT, RIGHT, BUTTON
 
 try:
     import RPi.GPIO as GPIO
@@ -30,15 +30,15 @@ class Rotary:
         if clk_state != self.clk_last_state and clk_state == GPIO.HIGH:
             self.clk_last_state = clk_state
             if dt_state == GPIO.HIGH:
-                return utils.RIGHT
+                return RIGHT
             else:
-                return utils.LEFT
+                return LEFT
 
         button_state = GPIO.input(ROTARY_SW)
         if button_state != self.button_last_state:
             self.button_last_state = button_state
             if button_state == GPIO.LOW:
-                return utils.BUTTON
+                return BUTTON
 
     def cleanup(self):
         GPIO.cleanup()

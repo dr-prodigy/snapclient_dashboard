@@ -19,34 +19,30 @@ from tendo import singleton
 from utils import log_stderr, os_async_command
 
 io_status = io_data.Status()
-lcd = dashboard.Dashboard()
+dash = dashboard.Dashboard()
 rotary = rotary_encoder.Rotary()
 keyreader = key_reader.KeyReader(block=False)
 
 def main():
     refresh_start_time = datetime.datetime.now()
     command = None
+    dash.menu_update(io_status)
     while True:
         # save refresh start time
         try:
             command = rotary.scan()
             if command is None:
                 command = keyreader.scan()
-            if command == utils.RIGHT:
-                io_status.volume += 2 if io_status.volume < 100 else 0
-            elif command == utils.LEFT:
-                io_status.volume -= 2 if io_status.volume > 0 else 0
-            elif command == utils.BUTTON:
-                io_status.is_muted = not io_status.is_muted
+            dash.menu_action(io_status, command)
 
             if (datetime.datetime.now() - refresh_start_time).total_seconds() > .2:
-                lcd.update(io_status)
+                dash.update(io_status)
                 refresh_start_time = datetime.datetime.now()
             else:
                 time.sleep(.01)
         except (KeyboardInterrupt, SystemExit):
             # cleanup
-            lcd.cleanup()
+            dash.cleanup()
             rotary.cleanup()
             raise
         except Exception:

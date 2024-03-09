@@ -3,7 +3,7 @@ import os
 import termios
 import fcntl
 import select
-import utils
+from utils import LEFT, RIGHT, BUTTON
 
 class KeyReader:
     """
@@ -88,8 +88,8 @@ class KeyReader:
     def scan(self):
         key = self.getch()
         if key == 'a':
-            return utils.LEFT
+            return LEFT
         elif key == 'd':
-            return utils.RIGHT
+            return RIGHT
         elif key == ' ':
-            return utils.BUTTON
+            return BUTTON
