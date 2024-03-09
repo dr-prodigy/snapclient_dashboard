@@ -321,15 +321,13 @@ class Dashboard:
             if io_status.is_muted:
                 self.line[1] = '&Mute&'
             else:
-                self.line[1] = 'Playing &>&'
+                self.line[1] = 'Playing &>&' if io_status.is_playing else 'Idle'
         elif menu_item[0] == 'show_volume':
-            vol_blink = ''
-            if menu_item[2]:
-                vol_blink = '&'
-            self.line[1] = ' {}{}{}{} '.format(vol_blink,
-                                               '\xFF' * int(io_status.volume / 100.0 * 14),
-                                               vol_blink,
-                                               '\xDB' * (14 - int(io_status.volume / 100.0 * 14)))
+            vol_blink = '&' if menu_item[2] else ''
+            self.line[1] = '{}{}{}{}'.format(vol_blink,
+                                             '\xFF' * int(io_status.volume / 100.0 * 14),
+                                             vol_blink,
+                                             '\xDB' * (14 - int(io_status.volume / 100.0 * 14)))
         else:
             self.line[1] = menu[self.current_menu_item][1]
 
@@ -355,8 +353,7 @@ class Dashboard:
                 io_status.is_muted = not io_status.is_muted
             elif action == 'change_volume':
                 pass
-
             self.current_menu_item = menu[self.current_menu_item][3]
 
-
-        self.menu_update(io_status)
+        if command is not None:
+            self.menu_update(io_status)

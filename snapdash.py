@@ -30,10 +30,12 @@ def main():
     while True:
         # save refresh start time
         try:
+            command = None
             command = rotary.scan()
             if command is None:
                 command = keyreader.scan()
-            dash.menu_action(io_status, command)
+            if command is not None:
+                dash.menu_action(io_status, command)
 
             if (datetime.datetime.now() - refresh_start_time).total_seconds() > .2:
                 dash.update(io_status)
