@@ -34,10 +34,10 @@ class Rotary:
                 command = RIGHT
             else:
                 command = LEFT
-        elif button_state != self.button_last_state:
-                self.button_last_state = button_state
-                if button_state == GPIO.LOW:
-                    command = BUTTON
+        if button_state != self.button_last_state:
+            self.button_last_state = button_state
+            if button_state == GPIO.LOW:
+                command = BUTTON
         sleep(0.01)
         self.clk_last_state = clk_state
         return command

@@ -30,7 +30,6 @@ def main():
     while True:
         # save refresh start time
         try:
-            command = None
             command = rotary.scan()
             if command is None:
                 command = keyreader.scan()

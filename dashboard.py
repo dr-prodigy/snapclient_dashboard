@@ -183,6 +183,7 @@ menu = {
     31: ['show_volume', 'Volume', 'change_volume', 3, 3],
 }
 
+
 class Dashboard:
     def __init__(self):
         self._current_program = -1
@@ -336,7 +337,7 @@ class Dashboard:
         if command == RIGHT:
             if action == 'change_volume':
                 io_status.volume += 2 if io_status.volume < 100 else 0
-            elif(self.current_menu_item + 1) in menu:
+            elif (self.current_menu_item + 1) in menu:
                 self.current_menu_item += 1
         elif command == LEFT:
             if action == 'change_volume':
