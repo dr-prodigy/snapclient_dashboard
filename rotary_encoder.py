@@ -25,21 +25,22 @@ class Rotary:
         self.button_last_state = GPIO.input(ROTARY_SW)
 
     def scan(self):
+        command = None
         clk_state = GPIO.input(ROTARY_DT)
         dt_state = GPIO.input(ROTARY_CLK)
+        button_state = GPIO.input(ROTARY_SW)
         if clk_state != self.clk_last_state and clk_state == GPIO.HIGH:
             if dt_state == GPIO.HIGH:
-                return RIGHT
+                command = RIGHT
             else:
-                return LEFT
-        self.clk_last_state = clk_state
+                command = LEFT
+        elif button_state != self.button_last_state:
+                self.button_last_state = button_state
+                if button_state == GPIO.LOW:
+                    command = BUTTON
         sleep(0.01)
-
-        button_state = GPIO.input(ROTARY_SW)
-        if button_state != self.button_last_state:
-            self.button_last_state = button_state
-            if button_state == GPIO.LOW:
-                return BUTTON
+        self.clk_last_state = clk_state
+        return command
 
     def cleanup(self):
         GPIO.cleanup()
