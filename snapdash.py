@@ -21,7 +21,7 @@ from utils import log_stderr, os_async_command
 io_status = io_data.Status()
 lcd = dashboard.Dashboard()
 rotary = rotary_encoder.Rotary()
-keyreader = key_reader.KeyReader(echo=False, block=False)
+keyreader = key_reader.KeyReader(block=False)
 
 def main():
     refresh_start_time = datetime.datetime.now()
