@@ -9,9 +9,11 @@ import traceback
 import os
 
 import config
+import utils
 import io_data
 import dashboard
 import rotary_encoder
+import key_reader
 
 from tendo import singleton
 from utils import log_stderr, os_async_command
@@ -19,6 +21,7 @@ from utils import log_stderr, os_async_command
 io_status = io_data.Status()
 lcd = dashboard.Dashboard()
 rotary = rotary_encoder.Rotary()
+keyreader = key_reader.KeyReader(echo=False, block=False)
 
 def main():
     refresh_start_time = datetime.datetime.now()
@@ -27,11 +30,13 @@ def main():
         # save refresh start time
         try:
             command = rotary.scan()
-            if command == rotary_encoder.RIGHT:
+            if command is None:
+                command = keyreader.scan()
+            if command == utils.RIGHT:
                 io_status.volume += 2 if io_status.volume < 100 else 0
-            elif command == rotary_encoder.LEFT:
+            elif command == utils.LEFT:
                 io_status.volume -= 2 if io_status.volume > 0 else 0
-            elif command == rotary_encoder.BUTTON:
+            elif command == utils.BUTTON:
                 io_status.is_muted = not io_status.is_muted
 
             if (datetime.datetime.now() - refresh_start_time).total_seconds() > .2:

@@ -3,6 +3,9 @@ import os
 import sys
 import datetime
 
+LEFT = 0
+RIGHT = 1
+BUTTON = 2
 
 def log_stderr(data):
     cur_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

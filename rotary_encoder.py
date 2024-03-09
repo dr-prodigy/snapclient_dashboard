@@ -1,7 +1,7 @@
 from time import sleep
-import keyboard
 
 import config
+import utils
 
 try:
     import RPi.GPIO as GPIO
@@ -12,10 +12,6 @@ except ImportError:
 ROTARY_DT = config.GPIO_ROTARY[0]
 ROTARY_CLK = config.GPIO_ROTARY[1]
 ROTARY_SW = config.GPIO_ROTARY[2]
-
-LEFT = 0
-RIGHT = 1
-BUTTON = 2
 
 class Rotary:
     def __init__(self):
@@ -34,23 +30,15 @@ class Rotary:
         if clk_state != self.clk_last_state and clk_state == GPIO.HIGH:
             self.clk_last_state = clk_state
             if dt_state == GPIO.HIGH:
-                return RIGHT
+                return utils.RIGHT
             else:
-                return LEFT
+                return utils.LEFT
 
         button_state = GPIO.input(ROTARY_SW)
         if button_state != self.button_last_state:
             self.button_last_state = button_state
             if button_state == GPIO.LOW:
-                return BUTTON
-
-        if keyboard.is_pressed("a"):
-            return LEFT
-        if keyboard.is_pressed("d"):
-            return RIGHT
-        if keyboard.is_pressed(" "):
-            return BUTTON
-        return None
+                return utils.BUTTON
 
     def cleanup(self):
         GPIO.cleanup()
