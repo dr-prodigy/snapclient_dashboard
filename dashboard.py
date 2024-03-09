@@ -311,18 +311,6 @@ class Dashboard:
         # restore cursor pos
         sys.stdout.write("\x1b8")
 
-    def menu_select_old(self, io_status):
-        # +----------------+
-        # |     Play >     |
-        # | ______________ |
-        # +----------------+
-        status = '&Play >&'
-        vol_blink = ''
-        if io_status.is_muted:
-            status = ' Mute '
-            vol_blink = '&'
-        self.line[0] = '     {}     '.format(status)
-
     # menu id: [show function, 'Menu desc', button change function, post change menu id, parent menu id],
     def menu_update(self, io_status):
         menu_item = menu[self.current_menu_item]
@@ -333,7 +321,7 @@ class Dashboard:
             if io_status.is_muted:
                 self.line[1] = '&Mute&'
             else:
-                self.line[1] = 'Playing'
+                self.line[1] = 'Playing &>&'
         elif menu_item[0] == 'show_volume':
             vol_blink = ''
             if menu_item[2]:

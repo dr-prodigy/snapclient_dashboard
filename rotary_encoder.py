@@ -28,11 +28,12 @@ class Rotary:
         clk_state = GPIO.input(ROTARY_DT)
         dt_state = GPIO.input(ROTARY_CLK)
         if clk_state != self.clk_last_state and clk_state == GPIO.HIGH:
-            self.clk_last_state = clk_state
             if dt_state == GPIO.HIGH:
                 return RIGHT
             else:
                 return LEFT
+        self.clk_last_state = clk_state
+        sleep(0.01)
 
         button_state = GPIO.input(ROTARY_SW)
         if button_state != self.button_last_state:
