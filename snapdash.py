@@ -14,6 +14,7 @@ import io_data
 import dashboard
 import rotary_encoder
 import key_reader
+import hass
 
 from tendo import singleton
 from utils import log_stderr, os_async_command
@@ -26,6 +27,7 @@ keyreader = key_reader.KeyReader(block=False)
 def main():
     refresh_start_time = datetime.datetime.now()
     command = None
+    hass.get_state(io_status)
     dash.menu_update(io_status)
     while True:
         # save refresh start time
