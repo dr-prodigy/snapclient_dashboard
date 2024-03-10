@@ -8,7 +8,9 @@ import math
 from time import strftime
 
 import config
+import hass
 from utils import log_stderr, LEFT, RIGHT, BUTTON
+from hass import Service
 
 NONE = 0
 GPIO_CharLCD = 1
@@ -362,10 +364,12 @@ class Dashboard:
                     io_status.source = io_status.sources[source_index]
                 else:
                     io_status.source = ''
+                hass.set_service(io_status, Service.SELECT_SOURCE)
             elif action == 'change_status':
                 io_status.is_volume_muted = not io_status.is_volume_muted
+                hass.set_service(io_status, Service.VOLUME_MUTE)
             elif action == 'change_volume':
-                pass
+                hass.set_service(io_status, Service.VOLUME_SET)
             self.current_menu_item = menu[self.current_menu_item][3]
 
         if command is not None:

@@ -21,23 +21,37 @@ import config
 import traceback
 import urllib3
 
-from requests import get
+from enum import Enum
+from requests import get, post
 from utils import log_stderr
 from datetime import datetime, timedelta
 
 if not config.HASS_CHECK_SSL_CERT:
     urllib3.disable_warnings()
 
+headers = {"Authorization": "Bearer " + config.HASS_TOKEN, "content-type": "application/json"}
 next_publish = datetime.now()
 
-STATUS_ENTITY_API_URL = "api/states/"
+STATE_API_URL = "api/states/"
+
+SERVICE_API_URL = "api/services/media_player/"
+SERVICE_API_VOLUME_SET = SERVICE_API_URL + "volume_set"
+SERVICE_API_VOLUME_MUTE = SERVICE_API_URL + "volume_mute"
+SERVICE_API_PLAY = SERVICE_API_URL + "media_play"
+SERVICE_API_STOP = SERVICE_API_URL + "media_stop"
+SERVICE_API_SELECT_SOURCE = SERVICE_API_URL + "select_source"
+
+class Service(Enum):
+    VOLUME_SET = 0
+    VOLUME_MUTE = 1
+    PLAY = 2
+    STOP = 3
+    SELECT_SOURCE = 4
 
 def get_state(io_status):
     global next_publish
-
     try:
-        url = config.HASS_SERVER + STATUS_ENTITY_API_URL + config.HASS_PLAYER_ENTITY_ID
-        headers = {"Authorization": "Bearer " + config.HASS_TOKEN, "content-type": "application/json"}
+        url = config.HASS_SERVER + STATE_API_URL + config.HASS_PLAYER_ENTITY_ID
 
         if datetime.now() >= next_publish:
             response = get(url, headers=headers, verify=config.HASS_CHECK_SSL_CERT)
@@ -52,5 +66,25 @@ def get_state(io_status):
             io_status.is_volume_muted = json['attributes']['is_volume_muted']
     except Exception as e:
         log_stderr('*HASS* ERR: GET_STATE ({}): {}'.format(config.HASS_PLAYER_ENTITY_ID, e))
+        # exit and delay next publish for 60 secs
+        next_publish = datetime.now() + timedelta(seconds=60)
+
+def set_service(io_status, service):
+    global next_publish
+    try:
+        json = {"entity_id": config.HASS_PLAYER_ENTITY_ID}
+        if service == Service.VOLUME_MUTE:
+            url = config.HASS_SERVER + SERVICE_API_VOLUME_MUTE
+            json.update({"is_volume_muted": io_status.is_volume_muted})
+        elif service == Service.VOLUME_SET:
+            url = config.HASS_SERVER + SERVICE_API_VOLUME_SET
+            json.update({"volume_level": io_status.volume_level})
+        elif service == Service.SELECT_SOURCE:
+            url = config.HASS_SERVER + SERVICE_API_SELECT_SOURCE
+            json.update({"source": io_status.source})
+        if datetime.now() >= next_publish:
+            response = post(url, headers=headers, verify=config.HASS_CHECK_SSL_CERT, json = json)
+    except Exception as e:
+        log_stderr('*HASS* ERR: SET_MUTE ({}): {}'.format(config.HASS_PLAYER_ENTITY_ID, e))
         # exit and delay next publish for 60 secs
         next_publish = datetime.now() + timedelta(seconds=60)
