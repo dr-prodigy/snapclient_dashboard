@@ -177,12 +177,12 @@ BIGNUMMATRIX = {
            ' '],
 }
 
-# menu id: [show function, 'Menu desc', button change function, post change menu id, parent menu id],
+# menu id: [show function, 'Menu desc', button change function, post change menu id, parent menu id, ui_changing]
 menu = {
-    1: ['show_source', 'Source', 'change_source', 1, -1],
-    2: ['show_status', 'Snapcast', 'change_status', 2, -1],
-    3: ['show_volume', 'Volume', None, 31, -1],
-    31: ['show_volume', 'Volume', 'change_volume', 3, 3],
+    1: ['show_source', 'Source', 'change_source', 1, -1, False],
+    2: ['show_status', 'Snapcast', 'change_status', 2, -1, False],
+    3: ['show_volume', 'Volume', None, 31, -1, False],
+    31: ['show_volume', 'Volume', 'change_volume', 3, 3, True],
 }
 
 
@@ -313,7 +313,7 @@ class Dashboard:
         # restore cursor pos
         sys.stdout.write("\x1b8")
 
-    # menu id: [show function, 'Menu desc', button change function, post change menu id, parent menu id],
+    # menu id: [show function, 'Menu desc', button change function, post change menu id, parent menu id, ui_changing]
     def menu_update(self, io_status):
         menu_item = menu[self.current_menu_item]
         self.line[0] = menu_item[1]
@@ -328,17 +328,24 @@ class Dashboard:
                 self.line[1] = io_status.state
         elif menu_item[0] == 'show_volume':
             vol_blink = '&' if menu_item[2] else ''
-            self.line[1] = '{}{}{}{}'.format(vol_blink,
-                                             '\xFF' * int(io_status.volume_level * 14),
-                                             vol_blink,
-                                             '\xDB' * (14 - int(io_status.volume_level * 14)))
+            if io_status.is_volume_muted:
+                self.line[1] = '{}Mute{}'.format(vol_blink, vol_blink)
+            else:
+                self.line[1] = '{}{}{}{}'.format(vol_blink,
+                                                 '\xFF' * int(io_status.volume_level * 14),
+                                                 vol_blink,
+                                                 '\xDB' * (14 - int(io_status.volume_level * 14)))
         else:
             self.line[1] = menu[self.current_menu_item][1]
+        io_status.ui_changing = menu_item[5]
 
     def menu_action(self, io_status, command):
+        state_refresh = False
         action = menu[self.current_menu_item][2]
         if command == RIGHT:
             if action == 'change_volume':
+                if io_status.is_volume_muted:
+                    io_status.is_volume_muted = False
                 io_status.volume_level += .02
                 if io_status.volume_level > 1:
                     io_status.volume_level = 1
@@ -349,6 +356,7 @@ class Dashboard:
                 io_status.volume_level -= .02
                 if io_status.volume_level < 0.08:
                     io_status.volume_level = 0.08
+                    io_status.is_volume_muted = True
             elif (self.current_menu_item - 1) in menu:
                 self.current_menu_item -= 1
         elif command == BUTTON:
@@ -365,12 +373,21 @@ class Dashboard:
                 else:
                     io_status.source = ''
                 hass.set_service(io_status, Service.SELECT_SOURCE)
+                state_refresh = True
             elif action == 'change_status':
                 io_status.is_volume_muted = not io_status.is_volume_muted
                 hass.set_service(io_status, Service.VOLUME_MUTE)
+                state_refresh = True
             elif action == 'change_volume':
-                hass.set_service(io_status, Service.VOLUME_SET)
+                if io_status.is_volume_muted:
+                    hass.set_service(io_status, Service.VOLUME_MUTE)
+                else:
+                    hass.set_service(io_status, Service.VOLUME_MUTE)
+                    hass.set_service(io_status, Service.VOLUME_SET)
             self.current_menu_item = menu[self.current_menu_item][3]
+
+        if state_refresh:
+            hass.get_state(io_status)
 
         if command is not None:
             self.menu_update(io_status)

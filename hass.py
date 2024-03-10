@@ -38,6 +38,7 @@ SERVICE_API_URL = "api/services/media_player/"
 SERVICE_API_VOLUME_SET = SERVICE_API_URL + "volume_set"
 SERVICE_API_VOLUME_MUTE = SERVICE_API_URL + "volume_mute"
 SERVICE_API_PLAY = SERVICE_API_URL + "media_play"
+SERVICE_API_PAUSE = SERVICE_API_URL + "media_pause"
 SERVICE_API_STOP = SERVICE_API_URL + "media_stop"
 SERVICE_API_SELECT_SOURCE = SERVICE_API_URL + "select_source"
 
@@ -45,8 +46,9 @@ class Service(Enum):
     VOLUME_SET = 0
     VOLUME_MUTE = 1
     PLAY = 2
-    STOP = 3
-    SELECT_SOURCE = 4
+    PAUSE = 3
+    STOP = 4
+    SELECT_SOURCE = 5
 
 def get_state(io_status):
     global next_publish
@@ -82,6 +84,12 @@ def set_service(io_status, service):
         elif service == Service.SELECT_SOURCE:
             url = config.HASS_SERVER + SERVICE_API_SELECT_SOURCE
             json.update({"source": io_status.source})
+        elif service == Service.PLAY:
+            url = config.HASS_SERVER + SERVICE_API_PLAY
+        elif service == Service.PAUSE:
+            url = config.HASS_SERVER + SERVICE_API_PAUSE
+        elif service == Service.STOP:
+            url = config.HASS_SERVER + SERVICE_API_STOP
         if datetime.now() >= next_publish:
             response = post(url, headers=headers, verify=config.HASS_CHECK_SSL_CERT, json = json)
     except Exception as e:

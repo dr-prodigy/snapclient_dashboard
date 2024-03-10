@@ -26,6 +26,7 @@ class Status:
         self.friendly_name = 'Snapcast'
         self.sources = ['Media', 'Spotify']
         self.source = 'Media'
+        self.ui_changing = False
 
     def get_output(self):
         return json.dumps(self.__dict__, indent=0)
