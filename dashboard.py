@@ -324,8 +324,7 @@ class Dashboard:
             if io_status.is_volume_muted:
                 self.line[1] = '&Mute&'
             else:
-                #self.line[1] = 'Playing &>&' if io_status.is_playing else 'Idle'
-                self.line[1] = io_status.state
+                self.line[1] = 'Playing &>&' if io_status.state == 'playing' else io_status.state.capitalize()
         elif menu_item[0] == 'show_volume':
             vol_blink = '&' if menu_item[2] else ''
             if io_status.is_volume_muted:
@@ -346,16 +345,16 @@ class Dashboard:
             if action == 'change_volume':
                 if io_status.is_volume_muted:
                     io_status.is_volume_muted = False
-                io_status.volume_level += .02
+                io_status.volume_level += .05
                 if io_status.volume_level > 1:
                     io_status.volume_level = 1
             elif (self.current_menu_item + 1) in menu:
                 self.current_menu_item += 1
         elif command == LEFT:
             if action == 'change_volume':
-                io_status.volume_level -= .02
-                if io_status.volume_level < 0.08:
-                    io_status.volume_level = 0.08
+                io_status.volume_level -= .05
+                if io_status.volume_level < 0.05:
+                    io_status.volume_level = 0.05
                     io_status.is_volume_muted = True
             elif (self.current_menu_item - 1) in menu:
                 self.current_menu_item -= 1
@@ -375,8 +374,13 @@ class Dashboard:
                 hass.set_service(io_status, Service.SELECT_SOURCE)
                 state_refresh = True
             elif action == 'change_status':
-                io_status.is_volume_muted = not io_status.is_volume_muted
-                hass.set_service(io_status, Service.VOLUME_MUTE)
+                if io_status.is_volume_muted:
+                    io_status.is_volume_muted = False
+                    hass.set_service(io_status, Service.VOLUME_MUTE)
+                elif io_status.state == 'playing':
+                    hass.set_service(io_status, Service.PAUSE)
+                elif io_status.state == 'idle':
+                    hass.set_service(io_status, Service.PLAY)
                 state_refresh = True
             elif action == 'change_volume':
                 if io_status.is_volume_muted:
@@ -386,8 +390,9 @@ class Dashboard:
                     hass.set_service(io_status, Service.VOLUME_SET)
             self.current_menu_item = menu[self.current_menu_item][3]
 
-        if state_refresh:
-            hass.get_state(io_status)
-
         if command is not None:
+            #if state_refresh:
+            #    hass.get_state(io_status)
             self.menu_update(io_status)
+
+        return state_refresh

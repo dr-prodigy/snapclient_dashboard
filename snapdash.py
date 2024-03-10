@@ -24,27 +24,32 @@ dash = dashboard.Dashboard()
 rotary = rotary_encoder.Rotary()
 keyreader = key_reader.KeyReader(block=False)
 
+STATE_REFRESH_TIME = 10
+LCD_REFRESH_TIME = .2
+
 def main():
+    # initialize refresh timeouts
     lcd_refresh_time = datetime.datetime.now()
     state_refresh_time = datetime.datetime.now()
     command = None
     hass.get_state(io_status)
     dash.menu_update(io_status)
     while True:
-        # save refresh start time
         try:
             command = rotary.scan()
             if command is None:
                 command = keyreader.scan()
             if command is not None:
-                dash.menu_action(io_status, command)
+                if dash.menu_action(io_status, command):
+                    # anticipated refresh
+                    state_refresh_time = datetime.datetime.now() - datetime.timedelta(seconds=STATE_REFRESH_TIME - 1)
 
-            if ((datetime.datetime.now() - state_refresh_time).total_seconds() > 10
+            if ((datetime.datetime.now() - state_refresh_time).total_seconds() > STATE_REFRESH_TIME
                     and not io_status.ui_changing):
                 hass.get_state(io_status)
                 dash.menu_update(io_status)
                 state_refresh_time = datetime.datetime.now()
-            if (datetime.datetime.now() - lcd_refresh_time).total_seconds() > .2:
+            if (datetime.datetime.now() - lcd_refresh_time).total_seconds() > LCD_REFRESH_TIME:
                 dash.update(io_status)
                 lcd_refresh_time = datetime.datetime.now()
             else:

@@ -22,10 +22,9 @@ class Status:
         self.state = ''
         self.volume_level = .5
         self.is_volume_muted = False
-        self.is_playing = False
         self.friendly_name = 'Snapcast'
-        self.sources = ['Media', 'Spotify']
-        self.source = 'Media'
+        self.sources = []
+        self.source = ''
         self.ui_changing = False
 
     def get_output(self):
