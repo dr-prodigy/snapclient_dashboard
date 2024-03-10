@@ -6,9 +6,6 @@ import datetime
 
 import config
 
-hide_message_time = None
-
-
 class Input:
     def __init__(self):
         self.last_update = datetime.datetime.now().isoformat()
@@ -16,38 +13,34 @@ class Input:
 
 class Status:
     def __init__(self):
-        global hide_message_time
         # general
         self.last_update = datetime.datetime.now().isoformat()
         self.last_change = datetime.datetime.now().isoformat()
+        self.hide_message_time = datetime.datetime.now()
         # gui
         self.message = ''
-        self.volume = 50
-        self.is_muted = False
-        self.is_playing = True
-        hide_message_time = datetime.datetime.now()
-
+        self.state = ''
+        self.volume_level = .5
+        self.is_volume_muted = False
+        self.is_playing = False
+        self.friendly_name = 'Snapcast'
         self.sources = ['Media', 'Spotify']
-        self.current_source = 0
+        self.source = 'Media'
 
     def get_output(self):
         return json.dumps(self.__dict__, indent=0)
 
     def update(self, current_time):
-        if self.message != '' and hide_message_time <= current_time:
+        if self.message != '' and self.hide_message_time <= current_time:
             self.message = ''
             self.last_change == current_time.isoformat()
 
     def send_message(self, message):
-        global hide_message_time
-
         self.message = message.encode('utf-8')
         self.last_change = datetime.datetime.now().isoformat()
-        hide_message_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
+        self.hide_message_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
 
     def reset_message(self):
-        global hide_message_time
-
         self.message = ''
         self.last_change = datetime.datetime.now().isoformat()
-        hide_message_time = datetime.datetime.now()
+        self.hide_message_time = datetime.datetime.now()

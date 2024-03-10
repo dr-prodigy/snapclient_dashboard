@@ -193,7 +193,6 @@ class Dashboard:
         self.lcd = None
         self.refresh_display()
         self.current_menu_item = 2
-        self.current_source = 0
 
     def _load_charset(self):
         if PAUSED:
@@ -317,18 +316,19 @@ class Dashboard:
         menu_item = menu[self.current_menu_item]
         self.line[0] = menu_item[1]
         if menu_item[0] == 'show_source':
-            self.line[1] = '&{}&'.format(io_status.sources[io_status.current_source])
+            self.line[1] = '&{}&'.format(io_status.source)
         elif menu_item[0] == 'show_status':
-            if io_status.is_muted:
+            self.line[0] = io_status.friendly_name
+            if io_status.is_volume_muted:
                 self.line[1] = '&Mute&'
             else:
                 self.line[1] = 'Playing &>&' if io_status.is_playing else 'Idle'
         elif menu_item[0] == 'show_volume':
             vol_blink = '&' if menu_item[2] else ''
             self.line[1] = '{}{}{}{}'.format(vol_blink,
-                                             '\xFF' * int(io_status.volume / 100.0 * 14),
+                                             '\xFF' * int(io_status.volume_level * 14),
                                              vol_blink,
-                                             '\xDB' * (14 - int(io_status.volume / 100.0 * 14)))
+                                             '\xDB' * (14 - int(io_status.volume_level * 14)))
         else:
             self.line[1] = menu[self.current_menu_item][1]
 
@@ -336,22 +336,33 @@ class Dashboard:
         action = menu[self.current_menu_item][2]
         if command == RIGHT:
             if action == 'change_volume':
-                io_status.volume += 2 if io_status.volume < 100 else 0
+                io_status.volume_level += .02
+                if io_status.volume_level > 1:
+                    io_status.volume_level = 1
             elif (self.current_menu_item + 1) in menu:
                 self.current_menu_item += 1
         elif command == LEFT:
             if action == 'change_volume':
-                io_status.volume -= 2 if io_status.volume > 0 else 0
+                io_status.volume_level -= .02
+                if io_status.volume_level < 0.08:
+                    io_status.volume_level = 0.08
             elif (self.current_menu_item - 1) in menu:
                 self.current_menu_item -= 1
         elif command == BUTTON:
             if action == 'change_source':
-                if io_status.current_source < len(io_status.sources) - 1:
-                    io_status.current_source += 1
+                if len(io_status.sources) > 0:
+                    source_index = -1
+                    if io_status.source in io_status.sources:
+                        source_index = io_status.sources.index(io_status.source)
+                    if source_index < len(io_status.sources) - 1:
+                        source_index += 1
+                    else:
+                        source_index = 0
+                    io_status.source = io_status.sources[source_index]
                 else:
-                    io_status.current_source = 0
+                    io_status.source = ''
             elif action == 'change_status':
-                io_status.is_muted = not io_status.is_muted
+                io_status.is_volume_muted = not io_status.is_volume_muted
             elif action == 'change_volume':
                 pass
             self.current_menu_item = menu[self.current_menu_item][3]

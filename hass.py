@@ -43,6 +43,12 @@ def get_state(io_status):
             response = get(url, headers=headers, verify=config.HASS_CHECK_SSL_CERT)
             if config.DEBUG_LOG:
                 print('*HASS* GET_STATE ({}): {}'.format(config.HASS_PLAYER_ENTITY_ID, response.text))
+            json = response.json()
+            io_status.friendly_name = json['attributes']['friendly_name']
+            io_status.volume_level = json['attributes']['volume_level']
+            io_status.sources = json['attributes']['source_list']
+            io_status.source = json['attributes']['source']
+            io_status.is_volume_muted = json['attributes']['is_volume_muted']
     except Exception as e:
         log_stderr('*HASS* ERR: GET_STATE ({}): {}'.format(config.HASS_PLAYER_ENTITY_ID, e))
         # exit and delay next publish for 60 secs
