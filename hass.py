@@ -45,6 +45,7 @@ def get_state(io_status):
                 print('*HASS* GET_STATE ({}): {}'.format(config.HASS_PLAYER_ENTITY_ID, response.text))
             json = response.json()
             io_status.friendly_name = json['attributes']['friendly_name']
+            io_status.state = json['state'].capitalize()
             io_status.volume_level = json['attributes']['volume_level']
             io_status.sources = json['attributes']['source_list']
             io_status.source = json['attributes']['source']

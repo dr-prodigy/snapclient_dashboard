@@ -322,7 +322,8 @@ class Dashboard:
             if io_status.is_volume_muted:
                 self.line[1] = '&Mute&'
             else:
-                self.line[1] = 'Playing &>&' if io_status.is_playing else 'Idle'
+                #self.line[1] = 'Playing &>&' if io_status.is_playing else 'Idle'
+                self.line[1] = io_status.state
         elif menu_item[0] == 'show_volume':
             vol_blink = '&' if menu_item[2] else ''
             self.line[1] = '{}{}{}{}'.format(vol_blink,
