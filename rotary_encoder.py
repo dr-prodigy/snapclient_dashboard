@@ -29,12 +29,12 @@ class Rotary:
         dt_state = GPIO.input(ROTARY_CLK)
         button_state = GPIO.input(ROTARY_SW)
         if (button_state != self.button_last_state and
-            (datetime.datetime.now() - self.last_change).total_seconds() > .1):
+                (datetime.datetime.now() - self.last_change).total_seconds() > .1):
             self.button_last_state = button_state
             if button_state == GPIO.LOW:
                 command = BUTTON
         elif (clk_state != self.clk_last_state and clk_state == GPIO.HIGH and
-            (datetime.datetime.now() - self.last_change).total_seconds() > .1):
+                (datetime.datetime.now() - self.last_change).total_seconds() > .1):
             if dt_state == GPIO.HIGH:
                 command = RIGHT
             else:
