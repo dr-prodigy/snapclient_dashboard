@@ -144,7 +144,6 @@ menu = {
 class Dashboard:
     def __init__(self):
         self._current_program = -1
-        self._message_timeout = datetime.datetime(9999, 12, 31)
         self.line = [''] * LCD_ROWS
         self.old_line = [''] * LCD_ROWS
         self.lcd = None
@@ -157,7 +156,7 @@ class Dashboard:
         if CURRENT_CHARSET == CHARSET_BIGNUM:
             if DISPLAY_TYPE == GPIO_CharLCD:
                 for font_count in range(5, 8):
-                    self.lcd.create_char(font_count, BIGNUMDATA[font_count])
+                    self.lcd.create_char(font_count, BIGNUMDATA[font_count - 5])
             elif DISPLAY_TYPE == I2C_LCD:
                 self.lcd.lcd_load_custom_chars(BIGNUMDATA)
 
@@ -190,7 +189,11 @@ class Dashboard:
         global NEW_CHARSET
         NEW_CHARSET = charset
 
-    def update(self, io_status):
+    def default_view(self, io_status):
+        self.current_menu_item = 2
+        self.menu_update(io_status)
+
+    def update(self):
         global CURRENT_CHARSET, NEW_CHARSET
         if DISPLAY_TYPE == NONE or PAUSED:
             return 0
