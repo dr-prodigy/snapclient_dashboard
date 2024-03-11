@@ -19,8 +19,8 @@ HASS_CHECK_SSL_CERT = False
 HASS_PLAYER_ENTITY_ID = 'media_player.my_player'
 
 # DEBUGGING
-TEST_MODE = True
-DEBUG_LOG = True
+TEST_MODE = False
+DEBUG_LOG = False
 VERBOSE_LOG = False
 
 # VARIOUS SETTINGS

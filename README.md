@@ -44,7 +44,7 @@ virtualenv venv
 ```commandline
 pip install -r requirements/requirements.txt
 ```
-- create `config.py` as a copy of `config_sample.py` and edit your parameters
+- create `config.py` as a copy of `config_sample.py` and edit your parameters (LCD model, GPIO connections, Home Assistant URL, token, media player entity ID)
 ```commandline
 cp config_sample.py config.py
 nano config.py
@@ -53,3 +53,21 @@ nano config.py
 ```commandline
 ./snapdash
 ```
+
+## Test & development
+Snapdash can be tested on any python-capable hardware (eg: PC), simulating LCD on screen, and using keyboard to control menu.
+To do so:
+- don't install / remove RPi.GPIO requirement (to allow internal stub lib)
+```commandline
+pip uninstall RPi.GPIO
+```
+- set `TEST_MODE = True` in `config.py`
+- keyboard commands will then be:
+```doctest
+Left = A
+Right = D
+Button = Space
+```
+
+### Warning
+In order to be run in production (headless), it is mandatory to set `TEST_MODE = False`
