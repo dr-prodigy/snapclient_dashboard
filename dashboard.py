@@ -208,7 +208,7 @@ class Dashboard:
             self.cleanup()
             self._load_charset()
 
-        blink_off = datetime.datetime.now().microsecond < 500000
+        blink_off = datetime.datetime.now().microsecond < 300000
 
         tmp_lines = [''] * LCD_ROWS
         for no in range(0, LCD_ROWS):
