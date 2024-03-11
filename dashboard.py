@@ -73,51 +73,6 @@ except Exception:
 LCD_LINE_DELAY = 3
 
 BIGNUMDATA = [
-    # on icon (flame) /x00
-    [0b01000,
-     0b01001,
-     0b00110,
-     0b01011,
-     0b10111,
-     0b10101,
-     0b01110,
-     0b00000],
-    # warming icon (empty flame) /x01
-    [0b01000,
-     0b01001,
-     0b00110,
-     0b01001,
-     0b10001,
-     0b10001,
-     0b01110,
-     0b00000],
-    # cooling icon (smokey) /x02
-    [0b01000,
-     0b10000,
-     0b01000,
-     0b10101,
-     0b10101,
-     0b10101,
-     0b10101,
-     0b00000],
-    # automatic char /x03
-    [0b00000,
-     0b00000,
-     0b01110,
-     0b10101,
-     0b10111,
-     0b10001,
-     0b01110,
-     0b00000],
-    # manual char /x04
-    [0b00100,
-     0b01110,
-     0b11110,
-     0b11111,
-     0b10001,
-     0b10001,
-     0b10001,
-     0b10010],
     # up \x05
     [0b11111,
      0b11111,
@@ -199,16 +154,9 @@ class Dashboard:
     def _load_charset(self):
         if PAUSED:
             return
-
-        if CURRENT_CHARSET == CHARSET_SYMBOL:
+        if CURRENT_CHARSET == CHARSET_BIGNUM:
             if DISPLAY_TYPE == GPIO_CharLCD:
-                for font_count in range(0, 4):
-                    self.lcd.create_char(font_count, SYMBOLDATA[font_count])
-            elif DISPLAY_TYPE == I2C_LCD:
-                self.lcd.lcd_load_custom_chars(SYMBOLDATA)
-        elif CURRENT_CHARSET == CHARSET_BIGNUM:
-            if DISPLAY_TYPE == GPIO_CharLCD:
-                for font_count in range(0, 8):
+                for font_count in range(5, 8):
                     self.lcd.create_char(font_count, BIGNUMDATA[font_count])
             elif DISPLAY_TYPE == I2C_LCD:
                 self.lcd.lcd_load_custom_chars(BIGNUMDATA)
@@ -257,7 +205,7 @@ class Dashboard:
             self.cleanup()
             self._load_charset()
 
-        blink_off = datetime.datetime.now().second % 2 != 0
+        blink_off = datetime.datetime.now().microsecond < 500000
 
         tmp_lines = [''] * LCD_ROWS
         for no in range(0, LCD_ROWS):

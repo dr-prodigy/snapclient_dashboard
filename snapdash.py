@@ -53,8 +53,6 @@ def main():
             if (datetime.datetime.now() - lcd_refresh_time).total_seconds() > LCD_REFRESH_TIME:
                 dash.update(io_status)
                 lcd_refresh_time = datetime.datetime.now()
-            else:
-                time.sleep(.01)
         except (KeyboardInterrupt, SystemExit):
             # cleanup
             dash.cleanup()
