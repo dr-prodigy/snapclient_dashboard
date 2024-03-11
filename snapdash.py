@@ -22,7 +22,8 @@ from utils import log_stderr, os_async_command
 io_status = io_data.Status()
 dash = dashboard.Dashboard()
 rotary = rotary_encoder.Rotary()
-keyreader = key_reader.KeyReader(block=False)
+if config.TEST_MODE:
+    keyreader = key_reader.KeyReader(block=False)
 
 STATE_REFRESH_TIME = 10
 LCD_REFRESH_TIME = .2
@@ -37,7 +38,7 @@ def main():
     while True:
         try:
             command = rotary.scan()
-            if command is None:
+            if config.TEST_MODE and command is None:
                 command = keyreader.scan()
             if command is not None:
                 if dash.menu_action(io_status, command):
