@@ -91,7 +91,7 @@ def set_service(io_status, service):
         elif service == Service.STOP:
             url = config.HASS_SERVER + SERVICE_API_STOP
         if datetime.now() >= next_publish:
-            response = post(url, headers=headers, verify=config.HASS_CHECK_SSL_CERT, json = json)
+            response = post(url, headers=headers, verify=config.HASS_CHECK_SSL_CERT, json=json)
     except Exception as e:
         log_stderr('*HASS* ERR: SET_MUTE ({}): {}'.format(config.HASS_PLAYER_ENTITY_ID, e))
         # exit and delay next publish for 60 secs
