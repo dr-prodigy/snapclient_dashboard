@@ -4,8 +4,6 @@
 import sys
 import datetime
 import traceback
-import math
-from time import strftime
 
 import config
 import hass
@@ -144,11 +142,13 @@ menu = {
 class Dashboard:
     def __init__(self):
         self._current_program = -1
-        self.line = [''] * LCD_ROWS
-        self.old_line = [''] * LCD_ROWS
+        self._line = [''] * LCD_ROWS
+        self._old_line = [''] * LCD_ROWS
         self.lcd = None
         self.refresh_display()
         self.current_menu_item = 2
+        self.is_backlit = False
+        self._backlight_off_time = datetime.datetime(9999, 12, 31)
 
     def _load_charset(self):
         if PAUSED:
@@ -176,7 +176,7 @@ class Dashboard:
 
             if io_status:
                 # force lines refresh
-                self.old_line = [''] * LCD_ROWS
+                self._old_line = [''] * LCD_ROWS
                 self.update()
         except KeyboardInterrupt:
             raise
@@ -189,6 +189,28 @@ class Dashboard:
         global NEW_CHARSET
         NEW_CHARSET = charset
 
+    def set_backlight(self, wakeup=False, secs_to_inactive = 3600):
+        global CURRENT_CHARSET, NEW_CHARSET
+
+        if DISPLAY_TYPE == NONE or PAUSED:
+            return
+
+        # set backlight and re-initialize LCD screen text on backlight on
+        if wakeup:
+            if not self.is_backlit:
+                if CURRENT_CHARSET != NEW_CHARSET:
+                    CURRENT_CHARSET = NEW_CHARSET
+                    self.cleanup()
+                    self._load_charset()
+                for row in range(0, LCD_ROWS):
+                    self.lcd.lcd_display_string(self._line[row], row)
+                self.is_backlit = wakeup
+                self.lcd.set_backlight(self.is_backlit)
+            self._backlight_off_time = datetime.datetime.now() + datetime.timedelta(seconds=secs_to_inactive)
+        elif datetime.datetime.now() >= self._backlight_off_time and self.is_backlit:
+            self.is_backlit = False
+            self.lcd.set_backlight(self.is_backlit)
+
     def default_view(self, io_status):
         self.current_menu_item = 2
         self.menu_update(io_status)
@@ -200,8 +222,7 @@ class Dashboard:
 
         start_time = datetime.datetime.now()
 
-        # backlight change timeout expired: set backlight with no timeout
-        self.lcd.set_backlight(True)
+        self.set_backlight()
 
         if CURRENT_CHARSET != NEW_CHARSET:
             CURRENT_CHARSET = NEW_CHARSET
@@ -214,7 +235,7 @@ class Dashboard:
         for no in range(0, LCD_ROWS):
             tmp_line = ''
             blinked = False
-            for ch in self.line[no]:
+            for ch in self._line[no]:
                 if ch == '&':
                     blinked = not blinked
                 else:
@@ -222,8 +243,8 @@ class Dashboard:
 
             tmp_line = tmp_line.center(LCD_COLUMNS)
 
-            if self.old_line[no] != tmp_line:
-                self.old_line[no] = tmp_line
+            if self._old_line[no] != tmp_line:
+                self._old_line[no] = tmp_line
                 self.lcd.lcd_display_string(tmp_line, no)
             tmp_lines[no] = tmp_line
 
@@ -254,10 +275,12 @@ class Dashboard:
         print(' +' + ('-' * LCD_COLUMNS) + '+ ')
         for row in range(0, LCD_ROWS):
             count = 0
-            cur_row = lines[row]
-            for char in '\x00\x01\x02\x03\x04\x05\x06\x07\xDB\xFF':
-                cur_row = cur_row.replace(char, replace_chars[count])
-                count += 1
+            cur_row = ' ' * LCD_COLUMNS
+            if self.is_backlit:
+                cur_row = lines[row]
+                for char in '\x00\x01\x02\x03\x04\x05\x06\x07\xDB\xFF':
+                    cur_row = cur_row.replace(char, replace_chars[count])
+                    count += 1
             print(' |{}| '.format(cur_row))
         print(' +' + ('-' * LCD_COLUMNS) + '+ ')
         print(' ' * int(LCD_COLUMNS + 4))
@@ -267,26 +290,26 @@ class Dashboard:
     # menu id: [show function, 'Menu desc', button change function, post change menu id, parent menu id, ui_changing]
     def menu_update(self, io_status):
         menu_item = menu[self.current_menu_item]
-        self.line[0] = menu_item[1]
+        self._line[0] = menu_item[1]
         if menu_item[0] == 'show_source':
-            self.line[1] = '&{}&'.format(io_status.source)
+            self._line[1] = '&{}&'.format(io_status.source)
         elif menu_item[0] == 'show_status':
-            self.line[0] = io_status.friendly_name
+            self._line[0] = io_status.friendly_name
             if io_status.is_volume_muted:
-                self.line[1] = '&Mute&'
+                self._line[1] = '&Mute&'
             else:
-                self.line[1] = 'Playing &>&' if io_status.state == 'playing' else io_status.state.capitalize()
+                self._line[1] = 'Playing &>&' if io_status.state == 'playing' else io_status.state.capitalize()
         elif menu_item[0] == 'show_volume':
             vol_blink = '&' if menu_item[2] else ''
             if io_status.is_volume_muted:
-                self.line[1] = '{}Mute{}'.format(vol_blink, vol_blink)
+                self._line[1] = '{}Mute{}'.format(vol_blink, vol_blink)
             else:
-                self.line[1] = '{}{}{}{}'.format(vol_blink,
+                self._line[1] = '{}{}{}{}'.format(vol_blink,
                                                  '\xFF' * int(io_status.volume_level * 14),
-                                                 vol_blink,
+                                                  vol_blink,
                                                  '\xDB' * (14 - int(io_status.volume_level * 14)))
         else:
-            self.line[1] = menu[self.current_menu_item][1]
+            self._line[1] = menu[self.current_menu_item][1]
         io_status.ui_changing = menu_item[5]
 
     def menu_action(self, io_status, command):

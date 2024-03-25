@@ -26,8 +26,9 @@ if config.TEST_MODE:
     keyreader = key_reader.KeyReader(block=False)
 
 STATE_REFRESH_TIME = 10
-INACTIVE_TIME = 20
 LCD_REFRESH_TIME = .2
+INACTIVE_DEFAULT_SECS = 20
+INACTIVE_DISPLAY_OFF_SECS = 5
 
 def main():
     # initialize refresh timeouts
@@ -36,6 +37,7 @@ def main():
     inactive_time = datetime.datetime.now()
     command = None
     hass.get_state(io_status)
+    dash.set_backlight(True, INACTIVE_DISPLAY_OFF_SECS)
     dash.menu_update(io_status)
     while True:
         try:
@@ -44,11 +46,12 @@ def main():
                 command = keyreader.scan()
             if command is not None:
                 inactive_time = datetime.datetime.now()
+                dash.set_backlight(True, INACTIVE_DISPLAY_OFF_SECS)
                 if dash.menu_action(io_status, command):
                     # anticipated refresh
                     state_refresh_time = datetime.datetime.now() - datetime.timedelta(seconds=STATE_REFRESH_TIME - 1)
 
-            if (datetime.datetime.now() - inactive_time).total_seconds() > INACTIVE_TIME:
+            if (datetime.datetime.now() - inactive_time).total_seconds() > INACTIVE_DEFAULT_SECS:
                 dash.default_view(io_status)
             if ((datetime.datetime.now() - state_refresh_time).total_seconds() > STATE_REFRESH_TIME
                     and not io_status.ui_changing):
