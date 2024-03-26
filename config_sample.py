@@ -9,6 +9,7 @@ LCD_ROWS = 2
 
 # LCD GPIO [RS, EN, D4, D5, D6, D7, BL] - Backlight is optional
 GPIO_LCD = [4, 17, 22, 23, 24, 25, 12]
+DISPLAY_AUTO_OFF = False
 
 # Rotary encoder GPIO
 GPIO_ROTARY = [9, 10, 11]

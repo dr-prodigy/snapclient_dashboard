@@ -4,6 +4,7 @@
 import sys
 import datetime
 import traceback
+from time import strftime
 
 import config
 import hass
@@ -127,8 +128,8 @@ BIGNUMMATRIX = {
           ' '],
     '.': [' ',
           '.'],
-    ':': ['\xA5',
-          '\xA5'],
+    ':': ['&.&',
+          '&.&'],
     '\'': ['\xDF',
            ' '],
 }
@@ -150,8 +151,8 @@ class Dashboard:
         self.lcd = None
         self.refresh_display()
         self.current_menu_item = 2
-        self.is_backlit = False
-        self._backlight_off_time = datetime.datetime(9999, 12, 31)
+        self.is_active = False
+        self._inactive_time = datetime.datetime(9999, 12, 31)
 
     def _load_charset(self):
         if PAUSED:
@@ -194,7 +195,7 @@ class Dashboard:
         global NEW_CHARSET
         NEW_CHARSET = charset
 
-    def set_backlight(self, wakeup=False, secs_to_inactive=3600):
+    def idle_update(self, wakeup=False, secs_to_inactive=3600):
         global CURRENT_CHARSET, NEW_CHARSET
 
         if DISPLAY_TYPE == NONE or PAUSED:
@@ -202,18 +203,20 @@ class Dashboard:
 
         # set backlight and re-initialize LCD screen text on backlight on
         if wakeup:
-            self._backlight_off_time = datetime.datetime.now() + datetime.timedelta(seconds=secs_to_inactive)
-            if not self.is_backlit:
-                self.is_backlit = True
-                self.lcd.set_backlight(self.is_backlit)
+            self._inactive_time = datetime.datetime.now() + datetime.timedelta(seconds=secs_to_inactive)
+            if not self.is_active:
+                self.is_active = True
+                if config.DISPLAY_AUTO_OFF:
+                    self.lcd.set_backlight(self.is_active)
                 self.update()
-        elif datetime.datetime.now() >= self._backlight_off_time and self.is_backlit:
-            self.is_backlit = False
-            self.lcd.set_backlight(self.is_backlit)
+        elif datetime.datetime.now() >= self._inactive_time and self.is_active:
+            self.is_active = False
+            if config.DISPLAY_AUTO_OFF:
+                self.lcd.set_backlight(self.is_active)
 
     def default_view(self, io_status):
         self.current_menu_item = 2
-        self.menu_update(io_status)
+        self.content_update(io_status)
 
     def update(self):
         global CURRENT_CHARSET, NEW_CHARSET
@@ -221,7 +224,7 @@ class Dashboard:
             return 0
 
         start_time = datetime.datetime.now()
-        self.set_backlight()
+        self.idle_update()
 
         if CURRENT_CHARSET != NEW_CHARSET:
             CURRENT_CHARSET = NEW_CHARSET
@@ -275,7 +278,7 @@ class Dashboard:
         for row in range(0, LCD_ROWS):
             count = 0
             cur_row = ' ' * LCD_COLUMNS
-            if self.is_backlit:
+            if self.is_active or not config.DISPLAY_AUTO_OFF:
                 cur_row = lines[row]
                 for char in '\x00\x01\x02\x03\x04\x05\x06\x07\xDB\xFF':
                     cur_row = cur_row.replace(char, replace_chars[count])
@@ -287,29 +290,47 @@ class Dashboard:
         sys.stdout.write("\x1b8")
 
     # menu id: [show function, 'Menu desc', button change function, post change menu id, parent menu id, ui_changing]
-    def menu_update(self, io_status):
-        menu_item = menu[self.current_menu_item]
-        self._line[0] = menu_item[1]
-        if menu_item[0] == 'show_source':
-            self._line[1] = '&{}&'.format(io_status.source)
-        elif menu_item[0] == 'show_status':
-            self._line[0] = io_status.friendly_name
-            if io_status.is_volume_muted:
-                self._line[1] = '&Mute&'
+    def content_update(self, io_status):
+        if self.is_active:
+            menu_item = menu[self.current_menu_item]
+            self._line[0] = menu_item[1]
+            if menu_item[0] == 'show_source':
+                self._line[1] = '&{}&'.format(io_status.source)
+            elif menu_item[0] == 'show_status':
+                self._line[0] = io_status.friendly_name
+                if io_status.is_volume_muted:
+                    self._line[1] = '&Mute&'
+                else:
+                    self._line[1] = 'Playing &>&' if io_status.state == 'playing' else io_status.state.capitalize()
+            elif menu_item[0] == 'show_volume':
+                vol_blink = '&' if menu_item[2] else ''
+                if io_status.is_volume_muted:
+                    self._line[1] = '{}Mute{}'.format(vol_blink, vol_blink)
+                else:
+                    self._line[1] = '{}{}{}{}'.format(vol_blink,
+                                                     '\xFF' * int(io_status.volume_level * 14),
+                                                      vol_blink,
+                                                     '\xDB' * (14 - int(io_status.volume_level * 14)))
             else:
-                self._line[1] = 'Playing &>&' if io_status.state == 'playing' else io_status.state.capitalize()
-        elif menu_item[0] == 'show_volume':
-            vol_blink = '&' if menu_item[2] else ''
-            if io_status.is_volume_muted:
-                self._line[1] = '{}Mute{}'.format(vol_blink, vol_blink)
-            else:
-                self._line[1] = '{}{}{}{}'.format(vol_blink,
-                                                 '\xFF' * int(io_status.volume_level * 14),
-                                                  vol_blink,
-                                                 '\xDB' * (14 - int(io_status.volume_level * 14)))
+                self._line[1] = menu[self.current_menu_item][1]
+            io_status.ui_changing = menu_item[5]
         else:
-            self._line[1] = menu[self.current_menu_item][1]
-        io_status.ui_changing = menu_item[5]
+            time = strftime("%H:%M")
+            time1 = time2 = ''
+            for char in time:
+                try:
+                    if char == '.' \
+                            or char == ':' \
+                            or char == '\'':
+                        time1 = time1[:-1]
+                        time2 = time2[:-1]
+                    time1 += BIGNUMMATRIX[char][0]
+                    time2 += BIGNUMMATRIX[char][1]
+                except Exception:
+                    traceback.print_exc()
+                    pass
+            self._line[0] = time1.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
+            self._line[1] = time2.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
 
     def menu_action(self, io_status, command):
         state_refresh = False
@@ -366,6 +387,6 @@ class Dashboard:
         if command is not None:
             #if state_refresh:
             #    hass.get_state(io_status)
-            self.menu_update(io_status)
+            self.content_update(io_status)
 
         return state_refresh
