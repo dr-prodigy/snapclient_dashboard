@@ -7,8 +7,8 @@ I2C_ADDRESS = 0x27
 LCD_COLUMNS = 16
 LCD_ROWS = 2
 
-# LCD GPIO [RS, EN, D4, D5, D6, D7]
-GPIO_LCD = [4, 17, 22, 23, 24, 25]
+# LCD GPIO [RS, EN, D4, D5, D6, D7, BL] - Backlight is optional
+GPIO_LCD = [4, 17, 22, 23, 24, 25, 12]
 
 # Rotary encoder GPIO
 GPIO_ROTARY = [9, 10, 11]

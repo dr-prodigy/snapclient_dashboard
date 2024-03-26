@@ -44,6 +44,9 @@ LCD_D4 = config.GPIO_LCD[2]
 LCD_D5 = config.GPIO_LCD[3]
 LCD_D6 = config.GPIO_LCD[4]
 LCD_D7 = config.GPIO_LCD[5]
+LCD_BL = None
+if len(config.GPIO_LCD) > 6:
+    LCD_BL = config.GPIO_LCD[6]
 
 # I2C_LCD configuration
 # i2c bus (0 -- original Pi, 1 -- Rev 2 Pi)
@@ -167,7 +170,9 @@ class Dashboard:
             if DISPLAY_TYPE == GPIO_CharLCD:
                 # initialize display
                 if self.lcd is None:
-                    self.lcd = RPiGPIO_CharLCD(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7, LCD_COLUMNS, LCD_ROWS)
+                    self.lcd = RPiGPIO_CharLCD(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7,
+                                               LCD_COLUMNS, LCD_ROWS,
+                                               LCD_BL)
             elif DISPLAY_TYPE == I2C_LCD:
                 # initialize display
                 self.lcd = I2C_LCD_driver.lcd(I2C_ADDRESS, I2C_BUS)
