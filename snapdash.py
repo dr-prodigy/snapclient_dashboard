@@ -28,7 +28,7 @@ if config.TEST_MODE:
 STATE_REFRESH_TIME = 10
 LCD_REFRESH_TIME = .2
 INACTIVE_DEFAULT_SECS = 20
-INACTIVE_DISPLAY_OFF_SECS = 5
+INACTIVE_DISPLAY_OFF_SECS = 60
 
 def main():
     # initialize refresh timeouts
@@ -45,6 +45,8 @@ def main():
             if config.TEST_MODE and command is None:
                 command = keyreader.scan()
             if command is not None:
+                if not dash.is_backlit:
+                    command = None
                 inactive_time = datetime.datetime.now()
                 dash.set_backlight(True, INACTIVE_DISPLAY_OFF_SECS)
                 if dash.menu_action(io_status, command):

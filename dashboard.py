@@ -194,7 +194,7 @@ class Dashboard:
         global NEW_CHARSET
         NEW_CHARSET = charset
 
-    def set_backlight(self, wakeup=False, secs_to_inactive = 3600):
+    def set_backlight(self, wakeup=False, secs_to_inactive=3600):
         global CURRENT_CHARSET, NEW_CHARSET
 
         if DISPLAY_TYPE == NONE or PAUSED:
@@ -202,16 +202,11 @@ class Dashboard:
 
         # set backlight and re-initialize LCD screen text on backlight on
         if wakeup:
-            if not self.is_backlit:
-                if CURRENT_CHARSET != NEW_CHARSET:
-                    CURRENT_CHARSET = NEW_CHARSET
-                    self.cleanup()
-                    self._load_charset()
-                for row in range(0, LCD_ROWS):
-                    self.lcd.lcd_display_string(self._line[row], row)
-                self.is_backlit = wakeup
-                self.lcd.set_backlight(self.is_backlit)
             self._backlight_off_time = datetime.datetime.now() + datetime.timedelta(seconds=secs_to_inactive)
+            if not self.is_backlit:
+                self.is_backlit = True
+                self.lcd.set_backlight(self.is_backlit)
+                self.update()
         elif datetime.datetime.now() >= self._backlight_off_time and self.is_backlit:
             self.is_backlit = False
             self.lcd.set_backlight(self.is_backlit)
@@ -226,7 +221,6 @@ class Dashboard:
             return 0
 
         start_time = datetime.datetime.now()
-
         self.set_backlight()
 
         if CURRENT_CHARSET != NEW_CHARSET:
