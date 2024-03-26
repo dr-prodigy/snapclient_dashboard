@@ -27,9 +27,10 @@ if config.TEST_MODE:
 
 LCD_REFRESH_TIME = .2
 CONTENT_REFRESH_TIME = 1
-STATE_REFRESH_TIME = 10
-INACTIVE_MENU_SECS = 20
-INACTIVE_DISPLAY_SECS = 10
+STATE_REFRESH_TIME_ACTIVE = 10
+STATE_REFRESH_TIME_INACTIVE = 120
+INACTIVE_MENU_SECS = 5
+INACTIVE_DISPLAY_SECS = 20
 
 def main():
     # initialize refresh timeouts
@@ -57,8 +58,9 @@ def main():
             # inactive time reached -> back to default view
             if (datetime.datetime.now() - inactive_time).total_seconds() > INACTIVE_MENU_SECS:
                 dash.default_view(io_status)
-            # periodic refresh
-            if ((datetime.datetime.now() - state_refresh_time).total_seconds() > STATE_REFRESH_TIME
+            # periodic refresh (longer if inactive)
+            refresh_timeout = STATE_REFRESH_TIME_ACTIVE if dash.is_active else STATE_REFRESH_TIME_INACTIVE
+            if ((datetime.datetime.now() - state_refresh_time).total_seconds() > refresh_timeout
                     and not io_status.ui_changing):
                 hass.get_state(io_status)
                 state_refresh_time = datetime.datetime.now()

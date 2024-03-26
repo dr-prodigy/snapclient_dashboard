@@ -278,9 +278,9 @@ class Dashboard:
         # move cursor home
         sys.stdout.write("\x1b[H")
         if CURRENT_CHARSET == CHARSET_SYMBOL:
-            replace_chars = ['?', '?', '?', '?', '>', '°', '?', '.']
+            replace_chars = ['?', '?', '?', '?', '>', '°', '#', '?', '.']
         else:
-            replace_chars = ['>', '-', '_', '=', '>', '°', '0', '.']
+            replace_chars = ['>', '-', '_', '=', '>', '°', '#', '0', '.']
 
         print(' ' * (LCD_COLUMNS + 4))
         print(' +' + ('-' * LCD_COLUMNS) + '+ ')
@@ -289,7 +289,7 @@ class Dashboard:
             cur_row = ' ' * LCD_COLUMNS
             if self.is_active or not config.DISPLAY_AUTO_OFF:
                 cur_row = lines[row]
-                for char in '\x04\x05\x06\x07\x7E\xDF\xFF\xA5':
+                for char in '\x04\x05\x06\x07\x7E\xDF\xDB\xFF\xA5':
                     cur_row = cur_row.replace(char, replace_chars[count])
                     count += 1
             print(' |{}| '.format(cur_row))
