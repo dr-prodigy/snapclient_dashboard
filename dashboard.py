@@ -215,12 +215,12 @@ class Dashboard:
             self._inactive_time = datetime.datetime.now() + datetime.timedelta(seconds=secs_to_inactive)
             if not self.is_active:
                 self.is_active = True
-                if config.DISPLAY_AUTO_OFF:
+                if config.DISPLAY_AUTO_DIM:
                     self.lcd.set_backlight(self.is_active)
                 self.update()
         elif datetime.datetime.now() >= self._inactive_time and self.is_active:
             self.is_active = False
-            if config.DISPLAY_AUTO_OFF:
+            if config.DISPLAY_AUTO_DIM:
                 self.lcd.set_backlight(self.is_active)
 
     def default_view(self, io_status):
@@ -282,18 +282,21 @@ class Dashboard:
         else:
             replace_chars = ['>', '-', '_', '=', '>', '°', '#', '0', '.']
 
+        horz_char = '-'
+        vert_char = '|'
+        if not self.is_active and config.DISPLAY_AUTO_DIM:
+            horz_char = vert_char = '.'
+
         print(' ' * (LCD_COLUMNS + 4))
-        print(' +' + ('-' * LCD_COLUMNS) + '+ ')
+        print(' +' + (horz_char * LCD_COLUMNS) + '+ ')
         for row in range(0, LCD_ROWS):
             count = 0
-            cur_row = ' ' * LCD_COLUMNS
-            if self.is_active or not config.DISPLAY_AUTO_OFF:
-                cur_row = lines[row]
-                for char in '\x04\x05\x06\x07\x7E\xDF\xDB\xFF\xA5':
-                    cur_row = cur_row.replace(char, replace_chars[count])
-                    count += 1
-            print(' |{}| '.format(cur_row))
-        print(' +' + ('-' * LCD_COLUMNS) + '+ ')
+            cur_row = lines[row]
+            for char in '\x04\x05\x06\x07\x7E\xDF\xDB\xFF\xA5':
+                cur_row = cur_row.replace(char, replace_chars[count])
+                count += 1
+            print(' {}{}{} '.format(vert_char, cur_row, vert_char))
+        print(' +' + (horz_char * LCD_COLUMNS) + '+ ')
         print(' ' * int(LCD_COLUMNS + 4))
         # restore cursor pos
         sys.stdout.write("\x1b8")

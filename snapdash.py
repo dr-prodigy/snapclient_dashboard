@@ -53,7 +53,8 @@ def main():
                 dash.idle_update(True, INACTIVE_DISPLAY_SECS)
                 if dash.menu_action(io_status, command):
                     # anticipated refresh
-                    state_refresh_time = datetime.datetime.now() - datetime.timedelta(seconds=STATE_REFRESH_TIME - 1)
+                    state_refresh_time = datetime.datetime.now() - \
+                                         datetime.timedelta(seconds=STATE_REFRESH_TIME_ACTIVE - 1)
 
             # inactive time reached -> back to default view
             if (datetime.datetime.now() - inactive_time).total_seconds() > INACTIVE_MENU_SECS:
