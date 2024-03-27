@@ -182,7 +182,7 @@ class Dashboard:
                 if self.lcd is None:
                     self.lcd = RPiGPIO_CharLCD(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7,
                                                LCD_COLUMNS, LCD_ROWS,
-                                               LCD_BL)
+                                               LCD_BL, enable_pwm=config.DISPLAY_PWM_BACKLIGHT)
             elif DISPLAY_TYPE == I2C_LCD:
                 # initialize display
                 self.lcd = I2C_LCD_driver.lcd(I2C_ADDRESS, I2C_BUS)
