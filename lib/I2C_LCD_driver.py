@@ -190,11 +190,11 @@ class lcd:
     def home(self):
         self.lcd_write(LCD_RETURNHOME)
 
-    # define backlight on/off (lcd.backlight(1); off= lcd.backlight(0)
-    def set_backlight(self, state):  # for state, 1 = on, 0 = off
-        if state == 1:
+    # define backlight on/off (on = lcd.backlight(1); off= lcd.backlight(0))
+    def set_backlight(self, state):  # for state, >=.5 = on, <.5 = off (no backlight levels)
+        if state >= .5:
             self.lcd_device.write_cmd(LCD_BACKLIGHT)
-        elif state == 0:
+        else:
             self.lcd_device.write_cmd(LCD_NOBACKLIGHT)
 
     # add custom characters (0 - 7)

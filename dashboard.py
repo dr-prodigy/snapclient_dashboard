@@ -216,12 +216,12 @@ class Dashboard:
             if not self.is_active:
                 self.is_active = True
                 if config.DISPLAY_AUTO_DIM:
-                    self.lcd.set_backlight(self.is_active)
+                    self.lcd.set_backlight(config.DISPLAY_ON_BACKLIGHT if config.DISPLAY_PWM_BACKLIGHT else True)
                 self.update()
         elif datetime.datetime.now() >= self._inactive_time and self.is_active:
             self.is_active = False
             if config.DISPLAY_AUTO_DIM:
-                self.lcd.set_backlight(self.is_active)
+                self.lcd.set_backlight(config.DISPLAY_DIM_BACKLIGHT if config.DISPLAY_PWM_BACKLIGHT else False)
 
     def default_view(self, io_status):
         self.current_menu_item = 2
