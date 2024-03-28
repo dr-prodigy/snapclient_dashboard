@@ -328,7 +328,7 @@ class Dashboard:
             io_status.ui_changing = menu_item[5]
         else:
             time = strftime("%H:%M")
-            time1 = time2 = ''
+            time1 = time2 = ' '
             for char in time:
                 try:
                     if char == '.' \
@@ -341,10 +341,10 @@ class Dashboard:
                 except Exception:
                     traceback.print_exc()
                     pass
-            self._line[0] = time1.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
-            self._line[1] = time2.center(LCD_COLUMNS + 1)[0:LCD_COLUMNS]
+            self._line[0] = time1.center(LCD_COLUMNS)
+            self._line[1] = time2.center(LCD_COLUMNS)
             if io_status.state == 'playing':
-                self._line[1] = "&\x04&" + self._line[1]
+                self._line[1] = "&\x04&" + self._line[1][1:-1]
 
     def menu_action(self, io_status, command):
         state_refresh = False
