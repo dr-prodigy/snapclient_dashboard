@@ -75,6 +75,15 @@ except Exception:
 LCD_LINE_DELAY = 3
 
 BIGNUMDATA = [
+    # pause \x03
+    [0b10010,
+     0b10010,
+     0b10010,
+     0b10010,
+     0b10010,
+     0b10010,
+     0b10010,
+     0b00000],
     # play \x04
     [0b10000,
      0b11000,
@@ -168,8 +177,8 @@ class Dashboard:
             return
         if CURRENT_CHARSET == CHARSET_BIGNUM:
             if DISPLAY_TYPE == GPIO_CharLCD:
-                for font_count in range(4, 8):
-                    self.lcd.create_char(font_count, BIGNUMDATA[font_count - 4])
+                for font_count in range(3, 8):
+                    self.lcd.create_char(font_count, BIGNUMDATA[font_count - 3])
             elif DISPLAY_TYPE == I2C_LCD:
                 self.lcd.lcd_load_custom_chars(BIGNUMDATA)
 
@@ -278,9 +287,9 @@ class Dashboard:
         # move cursor home
         sys.stdout.write("\x1b[H")
         if CURRENT_CHARSET == CHARSET_SYMBOL:
-            replace_chars = ['?', '?', '?', '?', '>', '°', '#', '?', '.']
+            replace_chars = ['?', '?', '?', '?', '?', '>', '°', '#', '?', '.']
         else:
-            replace_chars = ['>', '-', '_', '=', '>', '°', '#', '0', '.']
+            replace_chars = ['"', '>', '-', '_', '=', '>', '°', '#', '0', '.']
 
         horz_char = '-'
         vert_char = '|'
@@ -292,12 +301,12 @@ class Dashboard:
         for row in range(0, LCD_ROWS):
             count = 0
             cur_row = lines[row]
-            for char in '\x04\x05\x06\x07\x7E\xDF\xDB\xFF\xA5':
+            for char in '\x03\x04\x05\x06\x07\x7E\xDF\xDB\xFF\xA5':
                 cur_row = cur_row.replace(char, replace_chars[count])
                 count += 1
             print(' {}{}{} '.format(vert_char, cur_row, vert_char))
         print(' +' + (horz_char * LCD_COLUMNS) + '+ ')
-        print(' ' * int(LCD_COLUMNS + 4))
+        print(' ' * (LCD_COLUMNS + 4))
         # restore cursor pos
         sys.stdout.write("\x1b8")
 
@@ -313,7 +322,8 @@ class Dashboard:
                 if io_status.is_volume_muted:
                     self._line[1] = '&Mute&'
                 else:
-                    self._line[1] = 'Playing &\x04&' if io_status.state == 'playing' else io_status.state.capitalize()
+                    self._line[1] = 'Playing &\x04&' if io_status.state == 'playing' else (
+                        '{} \x03'.format(io_status.state.capitalize()))
             elif menu_item[0] == 'show_volume':
                 vol_blink = '&' if menu_item[2] else ''
                 if io_status.is_volume_muted:
@@ -328,12 +338,12 @@ class Dashboard:
             io_status.ui_changing = menu_item[5]
         else:
             time = strftime("%H:%M")
+            time = '88:88'
+            # add leading space
             time1 = time2 = ' '
             for char in time:
                 try:
-                    if char == '.' \
-                            or char == ':' \
-                            or char == '\'':
+                    if char == '.' or char == ':' or char == '\'':
                         time1 = time1[:-1]
                         time2 = time2[:-1]
                     time1 += BIGNUMMATRIX[char][0]
@@ -341,10 +351,12 @@ class Dashboard:
                 except Exception:
                     traceback.print_exc()
                     pass
-            self._line[0] = time1.center(LCD_COLUMNS)
-            self._line[1] = time2.center(LCD_COLUMNS)
+            # remove last space, then center
+            self._line[0] = time1[:-1].center(LCD_COLUMNS)
+            self._line[1] = time2[:-1].center(LCD_COLUMNS)
+            # add playing icon
             if io_status.state == 'playing':
-                self._line[1] = "&\x04&" + self._line[1][1:-1]
+                self._line[1] = "&\x04&" + self._line[1][1:]
 
     def menu_action(self, io_status, command):
         state_refresh = False
