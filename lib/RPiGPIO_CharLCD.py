@@ -154,7 +154,7 @@ class RPiGPIO_CharLCD(object):
             if enable_pwm:
                 self._pwm.start(initial_backlight)
                 self.set_backlight(initial_backlight)
-                self._pwm.ChangeFrequency(1000)
+                self._pwm.ChangeFrequency(500)
             else:
                 GPIO.output(backlight, self._blpol if initial_backlight else not self._blpol)
         # Initialize the display.
