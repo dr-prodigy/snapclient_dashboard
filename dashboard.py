@@ -338,7 +338,6 @@ class Dashboard:
             io_status.ui_changing = menu_item[5]
         else:
             time = strftime("%H:%M")
-            time = '88:88'
             # add leading space
             time1 = time2 = ' '
             for char in time:
