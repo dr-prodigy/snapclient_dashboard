@@ -96,7 +96,7 @@ BIGNUMDATA = [
     # up \x05
     [0b11111,
      0b11111,
-     0b11111,
+     0b00000,
      0b00000,
      0b00000,
      0b00000,
@@ -108,16 +108,16 @@ BIGNUMDATA = [
      0b00000,
      0b00000,
      0b00000,
-     0b11111,
+     0b00000,
      0b11111,
      0b11111],
     # up+down \x07
     [0b11111,
      0b11111,
-     0b11111,
      0b00000,
      0b00000,
-     0b11111,
+     0b00000,
+     0b00000,
      0b11111,
      0b11111]
 ]
@@ -410,8 +410,8 @@ class Dashboard:
             self.current_menu_item = menu[self.current_menu_item][3]
 
         if command is not None:
-            #if state_refresh:
-            #    hass.get_state(io_status)
+            # if state_refresh:
+            #     hass.get_state(io_status)
             self.content_update(io_status)
 
         return state_refresh
