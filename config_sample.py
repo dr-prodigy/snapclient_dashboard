@@ -18,7 +18,7 @@ DISPLAY_PWM_BACKLIGHT = True
 DISPLAY_ON_BACKLIGHT = 1.0
 DISPLAY_DIM_BACKLIGHT = 0.2
 
-# Rotary encoder GPIO
+# Rotary encoder GPIO [DT, CLK, SW]
 GPIO_ROTARY = [9, 10, 11]
 
 HASS_SERVER = 'https://myserver/'
