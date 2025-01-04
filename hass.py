@@ -7,16 +7,20 @@ import urllib3
 
 from enum import Enum
 from requests import get, post
-from utils import log_stderr
+
+import utils
+from utils import log_stderr, log_stdout
 from datetime import datetime, timedelta
 
 if not config.HASS_CHECK_SSL_CERT:
     urllib3.disable_warnings()
 
 headers = {"Authorization": "Bearer " + config.HASS_TOKEN, "content-type": "application/json"}
-next_publish = datetime.now()
+old_entity = {}
+refresh_time = publish_time = datetime.now()
 
 STATE_API_URL = "api/states/"
+STATUS_ENTITY_API_URL = STATE_API_URL + "sensor."
 
 SERVICE_API_URL = "api/services/media_player/"
 SERVICE_API_VOLUME_SET = SERVICE_API_URL + "volume_set"
@@ -26,6 +30,9 @@ SERVICE_API_PAUSE = SERVICE_API_URL + "media_pause"
 SERVICE_API_STOP = SERVICE_API_URL + "media_stop"
 SERVICE_API_SELECT_SOURCE = SERVICE_API_URL + "select_source"
 
+RETRY_MINUTES = 2
+REFRESH_MINUTES = 10
+
 class Service(Enum):
     VOLUME_SET = 0
     VOLUME_MUTE = 1
@@ -34,15 +41,14 @@ class Service(Enum):
     STOP = 4
     SELECT_SOURCE = 5
 
-def get_state(io_status):
-    global next_publish
+def get_status(io_status):
+    global publish_time
     try:
         url = config.HASS_SERVER + STATE_API_URL + config.HASS_PLAYER_ENTITY_ID
 
-        if datetime.now() >= next_publish:
+        if datetime.now() >= publish_time:
             response = get(url, headers=headers, verify=config.HASS_CHECK_SSL_CERT)
-            if config.DEBUG_LOG:
-                print('*HASS* GET_STATE ({}): {}'.format(config.HASS_PLAYER_ENTITY_ID, response.text))
+            utils.log_stdout('HASS', 'GET_STATE ({}): {}'.format(config.HASS_PLAYER_ENTITY_ID, response.text))
             json = response.json()
             io_status.friendly_name = json['attributes']['friendly_name']
             io_status.state = json['state']
@@ -53,10 +59,10 @@ def get_state(io_status):
     except Exception as e:
         log_stderr('*HASS* ERR: GET_STATE ({}): {}'.format(config.HASS_PLAYER_ENTITY_ID, e))
         # exit and delay next publish for 60 secs
-        next_publish = datetime.now() + timedelta(seconds=60)
+        publish_time = datetime.now() + timedelta(seconds=60)
 
 def set_service(io_status, service):
-    global next_publish
+    global publish_time
     try:
         json = {"entity_id": config.HASS_PLAYER_ENTITY_ID}
         if service == Service.VOLUME_MUTE:
@@ -74,9 +80,9 @@ def set_service(io_status, service):
             url = config.HASS_SERVER + SERVICE_API_PAUSE
         elif service == Service.STOP:
             url = config.HASS_SERVER + SERVICE_API_STOP
-        if datetime.now() >= next_publish:
+        if datetime.now() >= publish_time:
             response = post(url, headers=headers, verify=config.HASS_CHECK_SSL_CERT, json=json)
     except Exception as e:
         log_stderr('*HASS* ERR: SET_MUTE ({}): {}'.format(config.HASS_PLAYER_ENTITY_ID, e))
         # exit and delay next publish for 60 secs
-        next_publish = datetime.now() + timedelta(seconds=60)
+        publish_time = datetime.now() + timedelta(seconds=60)

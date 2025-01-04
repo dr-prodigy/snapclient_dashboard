@@ -1,11 +1,10 @@
 import config
 import datetime
-from time import sleep
 from utils import LEFT, RIGHT, BUTTON
 
 try:
     import RPi.GPIO as GPIO
-except ImportError:
+except:
     print('WARN: RPi.GPIO missing - loading stub library')
     import stubs.RPi.GPIO as GPIO
 

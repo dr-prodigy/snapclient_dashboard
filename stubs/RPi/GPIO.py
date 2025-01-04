@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import config
 
-DEBUG_LOG = config.VERBOSE_LOG
+DEBUG_LOG = config.LOG_GPIO
 
 # stubs
 BOARD = 1

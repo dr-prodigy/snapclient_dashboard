@@ -19,7 +19,7 @@
 
 import config
 
-DEBUG_LOG = config.VERBOSE_LOG
+DEBUG_LOG = config.LOG_GPIO
 
 
 class SMBus:

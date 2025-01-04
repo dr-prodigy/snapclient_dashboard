@@ -1,11 +1,18 @@
 #!/usr/bin/env python
 
+# **** Copy me to config.py and modify me as needed ****
+
+from utils import LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR
+
 # LCD modes : NONE = 0, GPIO_CharLCD = 1, I2C = 2
 MODULE_LCD = 1
 I2C_BUS = 1  # i2c bus (0 -- original Pi, 1 -- Rev 2 Pi)
 I2C_ADDRESS = 0x27
 LCD_COLUMNS = 16
 LCD_ROWS = 2
+
+MODULE_TEMP = 1
+TEMP_CORRECTION = 1.036
 
 # LCD GPIO [RS, EN, D4, D5, D6, D7, BL] - Backlight is optional
 GPIO_LCD = [4, 17, 22, 23, 24, 25, 12]
@@ -28,7 +35,8 @@ HASS_PLAYER_ENTITY_ID = 'media_player.my_player'
 
 # DEBUGGING
 TEST_MODE = False
-DEBUG_LOG = False
-VERBOSE_LOG = False
+LOG_LEVEL = LOG_DEBUG
+LOG_MUTE_MODULES = []
+LOG_GPIO = False
 
 # VARIOUS SETTINGS

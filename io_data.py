@@ -17,6 +17,9 @@ class Status:
         self.last_update = datetime.datetime.now().isoformat()
         self.last_change = datetime.datetime.now().isoformat()
         self.hide_message_time = datetime.datetime.now()
+        # heating
+        if config.MODULE_TEMP:
+            self.int_temp_c = 0.0
         # gui
         self.message = ''
         self.state = ''

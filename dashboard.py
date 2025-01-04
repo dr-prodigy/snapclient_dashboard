@@ -173,8 +173,7 @@ class Dashboard:
         self._inactive_time = datetime.datetime(9999, 12, 31)
 
     def _load_charset(self):
-        if PAUSED:
-            return
+        if PAUSED: return
         if CURRENT_CHARSET == CHARSET_BIGNUM:
             if DISPLAY_TYPE == GPIO_CharLCD:
                 for font_count in range(3, 8):
@@ -215,21 +214,19 @@ class Dashboard:
 
     def idle_update(self, wakeup=False, secs_to_inactive=3600):
         global CURRENT_CHARSET, NEW_CHARSET
-
-        if DISPLAY_TYPE == NONE or PAUSED:
-            return
+        if PAUSED: return
 
         # set backlight and re-initialize LCD screen text on backlight on
         if wakeup:
             self._inactive_time = datetime.datetime.now() + datetime.timedelta(seconds=secs_to_inactive)
             if not self.is_active:
                 self.is_active = True
-                if config.DISPLAY_AUTO_DIM:
+                if DISPLAY_TYPE != NONE and config.DISPLAY_AUTO_DIM:
                     self.lcd.set_backlight(config.DISPLAY_ON_BACKLIGHT if config.DISPLAY_PWM_BACKLIGHT else True)
                 self.update()
         elif datetime.datetime.now() >= self._inactive_time and self.is_active:
             self.is_active = False
-            if config.DISPLAY_AUTO_DIM:
+            if DISPLAY_TYPE != NONE and config.DISPLAY_AUTO_DIM:
                 self.lcd.set_backlight(config.DISPLAY_DIM_BACKLIGHT if config.DISPLAY_PWM_BACKLIGHT else False)
 
     def default_view(self, io_status):
@@ -238,8 +235,7 @@ class Dashboard:
 
     def update(self):
         global CURRENT_CHARSET, NEW_CHARSET
-        if DISPLAY_TYPE == NONE or PAUSED:
-            return 0
+        if PAUSED: return 0
 
         start_time = datetime.datetime.now()
         self.idle_update()
@@ -265,19 +261,18 @@ class Dashboard:
 
             if self._old_line[no] != tmp_line:
                 self._old_line[no] = tmp_line
-                self.lcd.lcd_display_string(tmp_line, no)
+                if DISPLAY_TYPE != NONE: self.lcd.lcd_display_string(tmp_line, no)
             tmp_lines[no] = tmp_line
 
         self.echo_display(tmp_lines)
         return (datetime.datetime.now() - start_time).total_seconds()
 
     def cleanup(self):
-        if DISPLAY_TYPE == NONE or PAUSED:
-            return
+        if PAUSED: return
 
         if DISPLAY_TYPE == I2C_LCD:
             self.lcd.lcd_clear()
-        else:
+        elif DISPLAY_TYPE == GPIO_CharLCD:
             # on RPiGPIO lcd_clear breaks..
             for row in range(0, LCD_ROWS):
                 self.lcd.lcd_display_string(' ' * LCD_COLUMNS, row)
