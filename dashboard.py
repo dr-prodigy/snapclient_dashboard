@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import math
 import sys
 import datetime
 import traceback
@@ -332,22 +332,25 @@ class Dashboard:
                 self._line[1] = menu[self.current_menu_item][1]
             io_status.ui_changing = menu_item[5]
         else:
-            time = strftime("%H:%M")
+            if config.MODULE_TEMP and math.floor(datetime.datetime.now().second / 10) in [0,2,4]:
+                data = '{:04.1f}\''.format(io_status.int_temp_c)
+            else:
+                data = strftime("%H:%M")
             # add leading space
-            time1 = time2 = ' '
-            for char in time:
+            line1 = line2 = ' '
+            for char in data:
                 try:
                     if char == '.' or char == ':' or char == '\'':
-                        time1 = time1[:-1]
-                        time2 = time2[:-1]
-                    time1 += BIGNUMMATRIX[char][0]
-                    time2 += BIGNUMMATRIX[char][1]
+                        line1 = line1[:-1]
+                        line2 = line2[:-1]
+                    line1 += BIGNUMMATRIX[char][0]
+                    line2 += BIGNUMMATRIX[char][1]
                 except Exception:
                     traceback.print_exc()
                     pass
             # remove last space, then center
-            self._line[0] = time1[:-1].center(LCD_COLUMNS)
-            self._line[1] = time2[:-1].center(LCD_COLUMNS)
+            self._line[0] = line1[:-1].center(LCD_COLUMNS)
+            self._line[1] = line2[:-1].center(LCD_COLUMNS)
             # add playing icon
             if io_status.state == 'playing':
                 self._line[1] = "&\x04&" + self._line[1][1:]
