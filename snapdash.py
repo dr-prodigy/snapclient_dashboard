@@ -42,7 +42,7 @@ def main():
     state_refresh_time = datetime.datetime.now()
     inactive_time = datetime.datetime.now()
     temperature_time = datetime.datetime.now() - datetime.timedelta(seconds=TEMPERATURE_REFRESH_TIME)
-    temperature_mqtt_time = datetime.datetime.now() - datetime.timedelta(seconds=TEMPERATURE_MQTT_PUBLISH_TIME)
+    temperature_mqtt_time = datetime.datetime.now()
     hass.get_status(io_status)
     dash.idle_update(True, INACTIVE_DISPLAY_SECS)
     dash.content_update(io_status)
