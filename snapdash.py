@@ -13,6 +13,7 @@ import rotary_encoder
 import key_reader
 import sensors
 import hass
+import mqtt
 
 from utils import log_stderr, os_async_command
 
@@ -20,6 +21,8 @@ io_status = io_data.Status()
 dash = dashboard.Dashboard()
 rotary = rotary_encoder.Rotary()
 sensor = sensors.Sensors()
+mqtt = mqtt.MQTT(io_status)
+
 if config.TEST_MODE:
     keyreader = key_reader.KeyReader(block=False)
 
@@ -27,9 +30,10 @@ LCD_REFRESH_TIME = .2
 CONTENT_REFRESH_TIME = 1
 STATE_REFRESH_TIME_ACTIVE = 10
 STATE_REFRESH_TIME_INACTIVE = 120
+TEMPERATURE_REFRESH_TIME = 20
+TEMPERATURE_MQTT_PUBLISH_TIME = 30 # 5 mins
 INACTIVE_MENU_SECS = 5
 INACTIVE_DISPLAY_SECS = 20
-TEMPERATURE_REFRESH_TIME = 20
 
 def main():
     # initialize refresh timeouts
@@ -38,6 +42,7 @@ def main():
     state_refresh_time = datetime.datetime.now()
     inactive_time = datetime.datetime.now()
     temperature_time = datetime.datetime.now()
+    temperature_mqtt_time = datetime.datetime.now()
     hass.get_status(io_status)
     dash.idle_update(True, INACTIVE_DISPLAY_SECS)
     dash.content_update(io_status)
@@ -75,12 +80,20 @@ def main():
             if (now - temperature_time).total_seconds() >= TEMPERATURE_REFRESH_TIME:
                 temp = sensor.read_temp()
                 if temp: io_status.int_temp_c = temp * config.TEMP_CORRECTION
+                else: io_status.int_temp_c = 11.11
                 temperature_time = now
+            if (now - temperature_mqtt_time).total_seconds() >= TEMPERATURE_MQTT_PUBLISH_TIME:
+                if io_status.int_temp_c:
+                    mqtt.publish()
+                    temperature_mqtt_time = now
+                else:
+                    temperature_mqtt_time += datetime.timedelta(seconds=TEMPERATURE_REFRESH_TIME)
         except (KeyboardInterrupt, SystemExit):
             # cleanup
             dash.cleanup()
             rotary.cleanup()
             sensor.cleanup()
+            mqtt.cleanup()
             raise
         except Exception:
             log_stderr(traceback.format_exc())
