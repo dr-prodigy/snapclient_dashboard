@@ -31,7 +31,7 @@ CONTENT_REFRESH_TIME = 1
 STATE_REFRESH_TIME_ACTIVE = 10
 STATE_REFRESH_TIME_INACTIVE = 120
 TEMPERATURE_REFRESH_TIME = 20
-TEMPERATURE_MQTT_PUBLISH_TIME = 30 # 5 mins
+TEMPERATURE_MQTT_PUBLISH_TIME = 300 # 5 mins
 INACTIVE_MENU_SECS = 5
 INACTIVE_DISPLAY_SECS = 20
 
@@ -41,8 +41,8 @@ def main():
     content_refresh_time = datetime.datetime.now()
     state_refresh_time = datetime.datetime.now()
     inactive_time = datetime.datetime.now()
-    temperature_time = datetime.datetime.now()
-    temperature_mqtt_time = datetime.datetime.now()
+    temperature_time = datetime.datetime.now() - datetime.timedelta(seconds=TEMPERATURE_REFRESH_TIME)
+    temperature_mqtt_time = datetime.datetime.now() - datetime.timedelta(seconds=TEMPERATURE_MQTT_PUBLISH_TIME)
     hass.get_status(io_status)
     dash.idle_update(True, INACTIVE_DISPLAY_SECS)
     dash.content_update(io_status)
@@ -80,7 +80,7 @@ def main():
             if (now - temperature_time).total_seconds() >= TEMPERATURE_REFRESH_TIME:
                 temp = sensor.read_temp()
                 if temp: io_status.int_temp_c = temp * config.TEMP_CORRECTION
-                else: io_status.int_temp_c = 11.11
+                else: io_status.int_temp_c = 11.1
                 temperature_time = now
             if (now - temperature_mqtt_time).total_seconds() >= TEMPERATURE_MQTT_PUBLISH_TIME:
                 if io_status.int_temp_c:
