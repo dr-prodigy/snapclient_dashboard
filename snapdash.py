@@ -79,8 +79,10 @@ def main():
                 state_refresh_time = now
             if (now - temperature_time).total_seconds() >= TEMPERATURE_REFRESH_TIME:
                 temp = sensor.read_temp()
-                if temp: io_status.int_temp_c = temp * config.TEMP_CORRECTION
-                else: io_status.int_temp_c = 11.1
+                if temp and io_status.int_temp_c != temp * config.TEMP_CORRECTION:
+                    io_status.int_temp_c = temp * config.TEMP_CORRECTION
+                    # temperature change: update
+                    temperature_mqtt_time = now - datetime.timedelta(seconds=TEMPERATURE_MQTT_PUBLISH_TIME)
                 temperature_time = now
             if (now - temperature_mqtt_time).total_seconds() >= TEMPERATURE_MQTT_PUBLISH_TIME:
                 if io_status.int_temp_c:
