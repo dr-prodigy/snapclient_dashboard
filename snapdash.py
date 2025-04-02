@@ -32,7 +32,7 @@ STATE_REFRESH_TIME_ACTIVE = 10
 STATE_REFRESH_TIME_INACTIVE = 120
 TEMPERATURE_REFRESH_TIME = 20
 TEMPERATURE_MQTT_PUBLISH_TIME = 900 # 15 mins
-TEMPERATURE_MQTT_PUBLISH_THRESHOLD = .2
+TEMPERATURE_MQTT_PUBLISH_THRESHOLD = 1
 INACTIVE_MENU_SECS = 5
 INACTIVE_DISPLAY_SECS = 20
 
@@ -44,6 +44,7 @@ def main():
     inactive_time = datetime.datetime.now()
     temperature_time = datetime.datetime.now() - datetime.timedelta(seconds=TEMPERATURE_REFRESH_TIME)
     temperature_mqtt_time = datetime.datetime.now()
+    temperature_mqtt_last_published = 0
     hass.get_status(io_status)
     dash.idle_update(True, INACTIVE_DISPLAY_SECS)
     dash.content_update(io_status)
@@ -80,7 +81,7 @@ def main():
                 state_refresh_time = now
             if (now - temperature_time).total_seconds() >= TEMPERATURE_REFRESH_TIME:
                 temp = sensor.read_temp()
-                if temp and abs(io_status.int_temp_c - temp * config.TEMP_CORRECTION) \
+                if temp and abs(temperature_mqtt_last_published - temp * config.TEMP_CORRECTION) \
                         >= TEMPERATURE_MQTT_PUBLISH_THRESHOLD:
                     io_status.int_temp_c = temp * config.TEMP_CORRECTION
                     # temperature change: update
@@ -89,6 +90,7 @@ def main():
             if (now - temperature_mqtt_time).total_seconds() >= TEMPERATURE_MQTT_PUBLISH_TIME:
                 if io_status.int_temp_c:
                     mqtt.publish()
+                    temperature_mqtt_last_published = io_status.int_temp_c
                     temperature_mqtt_time = now
                 else:
                     temperature_mqtt_time += datetime.timedelta(seconds=TEMPERATURE_REFRESH_TIME)
