@@ -31,7 +31,8 @@ CONTENT_REFRESH_TIME = 1
 STATE_REFRESH_TIME_ACTIVE = 10
 STATE_REFRESH_TIME_INACTIVE = 120
 TEMPERATURE_REFRESH_TIME = 20
-TEMPERATURE_MQTT_PUBLISH_TIME = 300 # 5 mins
+TEMPERATURE_MQTT_PUBLISH_TIME = 900 # 15 mins
+TEMPERATURE_MQTT_PUBLISH_THRESHOLD = .2
 INACTIVE_MENU_SECS = 5
 INACTIVE_DISPLAY_SECS = 20
 
@@ -79,7 +80,8 @@ def main():
                 state_refresh_time = now
             if (now - temperature_time).total_seconds() >= TEMPERATURE_REFRESH_TIME:
                 temp = sensor.read_temp()
-                if temp and io_status.int_temp_c != temp * config.TEMP_CORRECTION:
+                if temp and abs(io_status.int_temp_c - temp * config.TEMP_CORRECTION) \
+                        >= TEMPERATURE_MQTT_PUBLISH_THRESHOLD:
                     io_status.int_temp_c = temp * config.TEMP_CORRECTION
                     # temperature change: update
                     temperature_mqtt_time = now - datetime.timedelta(seconds=TEMPERATURE_MQTT_PUBLISH_TIME)
