@@ -81,11 +81,12 @@ def main():
                 state_refresh_time = now
             if (now - temperature_time).total_seconds() >= TEMPERATURE_REFRESH_TIME:
                 temp = sensor.read_temp()
-                if temp and abs(temperature_mqtt_last_published - temp * config.TEMP_CORRECTION) \
-                        >= TEMPERATURE_MQTT_PUBLISH_THRESHOLD:
+                if temp:
                     io_status.int_temp_c = temp * config.TEMP_CORRECTION
-                    # temperature change: update
-                    temperature_mqtt_time = now - datetime.timedelta(seconds=TEMPERATURE_MQTT_PUBLISH_TIME)
+                    if abs(temperature_mqtt_last_published -
+                           io_status.int_temp_c) >= TEMPERATURE_MQTT_PUBLISH_THRESHOLD:
+                        # temperature change: update
+                        temperature_mqtt_time = now - datetime.timedelta(seconds=TEMPERATURE_MQTT_PUBLISH_TIME)
                 temperature_time = now
             if (now - temperature_mqtt_time).total_seconds() >= TEMPERATURE_MQTT_PUBLISH_TIME:
                 if io_status.int_temp_c:
