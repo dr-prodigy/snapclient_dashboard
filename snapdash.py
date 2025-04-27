@@ -63,6 +63,7 @@ def main():
                     if dash.menu_action(io_status, command):
                         # anticipated refresh
                         state_refresh_time = now - datetime.timedelta(seconds=STATE_REFRESH_TIME_ACTIVE - 1)
+                        break
                 time.sleep(.01)
 
             if (now - lcd_refresh_time).total_seconds() >= LCD_REFRESH_TIME:

@@ -27,23 +27,19 @@ class Rotary:
         clk_state = GPIO.input(ROTARY_DT)
         dt_state = GPIO.input(ROTARY_CLK)
         button_state = GPIO.input(ROTARY_SW)
+        now = datetime.datetime.now()
         if (button_state != self.button_last_state and
-                (datetime.datetime.now() - self.last_change).total_seconds() > .1):
+                (now - self.last_change).total_seconds() > .05):
             self.button_last_state = button_state
+            self.last_change = now
             if button_state == GPIO.LOW:
                 command = BUTTON
-        elif (clk_state != self.clk_last_state and clk_state == GPIO.HIGH and
-                (datetime.datetime.now() - self.last_change).total_seconds() > .1):
-            if dt_state == GPIO.HIGH:
-                command = RIGHT
-            else:
-                command = LEFT
-
-        if command:
-            self.last_change = datetime.datetime.now()
+        elif clk_state == GPIO.HIGH and self.clk_last_state == GPIO.LOW:
+            command = RIGHT if dt_state == GPIO.HIGH else LEFT
 
         self.clk_last_state = clk_state
         return command
 
-    def cleanup(self):
+    @staticmethod
+    def cleanup():
         GPIO.cleanup()
