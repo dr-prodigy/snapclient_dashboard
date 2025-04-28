@@ -215,16 +215,17 @@ class Dashboard:
     def idle_update(self, wakeup=False, secs_to_inactive=3600):
         global CURRENT_CHARSET, NEW_CHARSET
         if PAUSED: return
+        now = datetime.datetime.now()
 
         # set backlight and re-initialize LCD screen text on backlight on
         if wakeup:
-            self._inactive_time = datetime.datetime.now() + datetime.timedelta(seconds=secs_to_inactive)
+            self._inactive_time = now + datetime.timedelta(seconds=secs_to_inactive)
             if not self.is_active:
                 self.is_active = True
                 if DISPLAY_TYPE != NONE and config.DISPLAY_AUTO_DIM:
                     self.lcd.set_backlight(config.DISPLAY_ON_BACKLIGHT if config.DISPLAY_PWM_BACKLIGHT else True)
                 self.update()
-        elif datetime.datetime.now() >= self._inactive_time and self.is_active:
+        elif now >= self._inactive_time and self.is_active:
             self.is_active = False
             if DISPLAY_TYPE != NONE and config.DISPLAY_AUTO_DIM:
                 self.lcd.set_backlight(config.DISPLAY_DIM_BACKLIGHT if config.DISPLAY_PWM_BACKLIGHT else False)

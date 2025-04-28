@@ -38,12 +38,9 @@ INACTIVE_DISPLAY_SECS = 20
 
 def main():
     # initialize refresh timeouts
-    lcd_refresh_time = datetime.datetime.now()
-    content_refresh_time = datetime.datetime.now()
-    state_refresh_time = datetime.datetime.now()
-    inactive_time = datetime.datetime.now()
-    temperature_time = datetime.datetime.now() - datetime.timedelta(seconds=TEMPERATURE_REFRESH_TIME)
-    temperature_mqtt_time = datetime.datetime.now()
+    now = lcd_refresh_time = content_refresh_time = state_refresh_time = \
+        inactive_time = temperature_mqtt_time = datetime.datetime.now()
+    temperature_time = now - datetime.timedelta(seconds=TEMPERATURE_REFRESH_TIME)
     temperature_mqtt_last_published = 0
     hass.get_status(io_status)
     dash.idle_update(True, INACTIVE_DISPLAY_SECS)
@@ -57,21 +54,14 @@ def main():
                     command = keyreader.scan()
                 if command is not None:
                     inactive_time = now
-                    if not dash.is_active:
-                        command = None
                     dash.idle_update(True, INACTIVE_DISPLAY_SECS)
-                    if dash.menu_action(io_status, command):
-                        # anticipated refresh
-                        state_refresh_time = now - datetime.timedelta(seconds=STATE_REFRESH_TIME_ACTIVE - 1)
+                    if dash.is_active and dash.menu_action(io_status, command):
+                        # early refresh (state, lcd)
+                        lcd_refresh_time = state_refresh_time = \
+                                now - datetime.timedelta(seconds=STATE_REFRESH_TIME_ACTIVE - 1)
                         break
                 time.sleep(.01)
 
-            if (now - lcd_refresh_time).total_seconds() >= LCD_REFRESH_TIME:
-                dash.update()
-                lcd_refresh_time = now
-            if (now - content_refresh_time).total_seconds() >= CONTENT_REFRESH_TIME:
-                dash.content_update(io_status)
-                content_refresh_time = now
             # inactive time reached -> back to default view
             if (now - inactive_time).total_seconds() >= INACTIVE_MENU_SECS:
                 dash.default_view(io_status)
@@ -80,6 +70,15 @@ def main():
             if (now - state_refresh_time).total_seconds() >= refresh_timeout and not io_status.ui_changing:
                 hass.get_status(io_status)
                 state_refresh_time = now
+            # content refresh
+            if (now - content_refresh_time).total_seconds() >= CONTENT_REFRESH_TIME:
+                dash.content_update(io_status)
+                content_refresh_time = now
+            # lcd refresh
+            if (now - lcd_refresh_time).total_seconds() >= LCD_REFRESH_TIME:
+                dash.update()
+                lcd_refresh_time = now
+            # temperature refresh
             if (now - temperature_time).total_seconds() >= TEMPERATURE_REFRESH_TIME:
                 temp = sensor.read_temp()
                 if temp:
@@ -89,6 +88,7 @@ def main():
                         # temperature change: update
                         temperature_mqtt_time = now - datetime.timedelta(seconds=TEMPERATURE_MQTT_PUBLISH_TIME)
                 temperature_time = now
+            # mqtt refresh
             if (now - temperature_mqtt_time).total_seconds() >= TEMPERATURE_MQTT_PUBLISH_TIME:
                 if io_status.int_temp_c:
                     mqtt.publish()
